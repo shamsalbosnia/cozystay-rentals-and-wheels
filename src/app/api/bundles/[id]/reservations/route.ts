@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { sendEmail } from '@/lib/email';
+import { bundleReservationEmail } from '@/lib/emailTemplates';
 
 export async function POST(
   req: NextRequest,
@@ -37,5 +39,17 @@ export async function POST(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Send thank-you email (non-blocking)
+  const { subject, html } = bundleReservationEmail({
+    customer_name,
+    bundle_title: bundle_title || 'Bundle',
+    start_date,
+    end_date,
+    persons: persons || 1,
+    customer_phone,
+  });
+  void sendEmail(customer_email, subject, html);
+
   return NextResponse.json(data, { status: 201 });
 }

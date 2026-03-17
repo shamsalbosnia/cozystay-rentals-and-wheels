@@ -1,7 +1,14 @@
 {
-  "/page": "app/page.js",
-  "/apartments/page": "app/apartments/page.js",
+  "/api/admin/cars/route": "app/api/admin/cars/route.js",
+  "/api/admin/villas/route": "app/api/admin/villas/route.js",
+  "/api/admin/hotels/route": "app/api/admin/hotels/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/admin/apartments/route": "app/api/admin/apartments/route.js",
+  "/api/admin/bundles/route": "app/api/admin/bundles/route.js",
+  "/api/admin/reservations/route": "app/api/admin/reservations/route.js",
+  "/api/admin/bundle-reservations/route": "app/api/admin/bundle-reservations/route.js",
+  "/api/custom-bundle-requests/route": "app/api/custom-bundle-requests/route.js",
+  "/api/admin/adventures/route": "app/api/admin/adventures/route.js",
   "/cars/page": "app/cars/page.js",
-  "/bundles/page": "app/bundles/page.js",
   "/admin/page": "app/admin/page.js"
 }

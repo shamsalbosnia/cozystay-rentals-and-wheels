@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { sendEmail } from '@/lib/email';
+import { carReservationEmail } from '@/lib/emailTemplates';
 
 export async function GET(
   _req: NextRequest,
@@ -12,7 +14,7 @@ export async function GET(
     .from('car_reservations')
     .select('start_date, end_date, status')
     .eq('car_id', parseInt(id))
-    .in('status', ['confirmed', 'pending']);
+    .eq('status', 'confirmed');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
@@ -75,5 +77,17 @@ export async function POST(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Send thank-you email (non-blocking)
+  const carName = body.car_name || `Car #${carId}`;
+  const { subject, html } = carReservationEmail({
+    customer_name,
+    car_name: carName,
+    start_date,
+    end_date,
+    customer_phone,
+  });
+  void sendEmail(customer_email, subject, html);
+
   return NextResponse.json(data, { status: 201 });
 }
