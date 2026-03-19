@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#F5F0E8]">
       <div className="bg-white rounded-2xl shadow-lg p-10 w-full max-w-md">
         <h1 className="text-2xl font-bold text-center mb-2 text-[#8B7355]">Admin Login</h1>
-        <p className="text-center text-gray-500 text-sm mb-8">CozyStay Rentals & Wheels</p>
+        <p className="text-center text-gray-500 text-sm mb-8">Shams Al Bosnia</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>

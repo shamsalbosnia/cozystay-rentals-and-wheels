@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   CarFront, Building2, Plus, Search, Edit, Trash2,
   CalendarCheck, Check, X, Clock, Hotel, TreePine, Package, ChevronDown, ChevronUp, Eye, Compass
 } from "lucide-react";
@@ -62,6 +65,64 @@ export default function AdminDashboard() {
     deleteCar, deleteApartment, deleteHotel, deleteVilla,
     updateReservationStatus, createReservation,
   } = useSupabaseAdmin();
+
+  // ── Accommodation reservations state ──
+  const [accReservations, setAccReservations] = useState<any[]>([]);
+  const fetchAccReservations = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/accommodation-reservations');
+      if (res.ok) setAccReservations(await res.json());
+    } catch {}
+  }, []);
+  React.useEffect(() => { fetchAccReservations(); }, [fetchAccReservations]);
+
+  const updateAccReservationStatus = async (id: number, status: string, price?: string, paymentOptions?: ('full' | 'deposit')[]) => {
+    try {
+      const body: any = { status };
+      if (price) body.price = price;
+      if (paymentOptions && paymentOptions.length > 0) body.payment_options = paymentOptions;
+      const res = await fetch(`/api/admin/accommodation-reservations/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(`Reservation ${status}`);
+      fetchAccReservations();
+    } catch (err: any) { toast.error('Error updating reservation', { description: err.message }); }
+  };
+
+  // ── Approve dialog state ──
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [approvingType, setApprovingType] = useState<'car' | 'accommodation'>('car');
+  const [approvePrice, setApprovePrice] = useState('');
+  const [paymentOptions, setPaymentOptions] = useState({ full: true, deposit: false });
+
+  const togglePaymentOption = (opt: 'full' | 'deposit') => {
+    setPaymentOptions(prev => ({ ...prev, [opt]: !prev[opt] }));
+  };
+
+  const openApproveDialog = (id: number, type: 'car' | 'accommodation') => {
+    setApprovingId(id);
+    setApprovingType(type);
+    setApprovePrice('');
+    setPaymentOptions({ full: true, deposit: false });
+  };
+
+  const handleApproveConfirm = async () => {
+    if (approvingId === null) return;
+    const selectedOptions = (Object.keys(paymentOptions) as ('full' | 'deposit')[]).filter(k => paymentOptions[k]);
+    if (approvingType === 'car') {
+      await updateReservationStatus(approvingId, 'confirmed', undefined, approvePrice || undefined, selectedOptions);
+    } else {
+      await updateAccReservationStatus(approvingId, 'confirmed', approvePrice || undefined, selectedOptions);
+    }
+    setApprovingId(null);
+    setApprovePrice('');
+    setPaymentOptions({ full: true, deposit: false });
+  };
+
+  const basePrice = parseFloat(approvePrice) || 0;
+  const fullAmount = (basePrice * 0.95).toFixed(2);
+  const depositAmount = (basePrice * 0.10).toFixed(2);
 
   // ── Car state ──
   const emptyCar: Omit<Car, 'id'> = { name: '', image_url: '', images: [], price_per_day: 0, type: 'Sedan', seats: 5, transmission: 'Automatic', features: [], is_active: true };
@@ -813,7 +874,7 @@ export default function AdminDashboard() {
                       <td className="py-3.5 px-4 text-right">
                         {r.status === 'pending' ? (
                           <div className="flex justify-end gap-1.5">
-                            <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => updateReservationStatus(r.id!, 'confirmed')}>
+                            <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => openApproveDialog(r.id!, 'car')}>
                               <Check className="h-3 w-3 mr-1" /> Approve
                             </Button>
                             <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => updateReservationStatus(r.id!, 'cancelled')}>
@@ -966,6 +1027,55 @@ export default function AdminDashboard() {
                           <div className="flex justify-end gap-1.5">
                             <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => handleBundleResStatus(r.id, 'confirmed')}><Check className="h-3 w-3 mr-1" /> Approve</Button>
                             <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => handleBundleResStatus(r.id, 'cancelled')}><X className="h-3 w-3 mr-1" /> Reject</Button>
+                          </div>
+                        ) : <span className="text-xs text-muted-foreground">--</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Accommodation Reservations */}
+          <div className="mb-4 mt-8">
+            <h2 className="text-lg font-semibold">Hotel / Villa / Apartment Reservations</h2>
+            <p className="text-sm text-muted-foreground">Booking requests for accommodations</p>
+          </div>
+          <Card className="border-border/50 shadow-sm overflow-hidden mb-8">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="bg-foreground/[0.03] border-b border-border/50">
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Type</th>
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Property</th>
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Customer</th>
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Dates</th>
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Persons</th>
+                  <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Status</th>
+                  <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wider text-foreground/80">Actions</th>
+                </tr></thead>
+                <tbody className="divide-y divide-border/30">
+                  {accReservations.length === 0 ? (
+                    <tr><td colSpan={7} className="py-16 text-center"><Hotel className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No accommodation reservations yet</p></td></tr>
+                  ) : accReservations.map((r: any) => (
+                    <tr key={r.id} className="hover:bg-foreground/[0.02] transition-colors">
+                      <td className="py-3.5 px-4">
+                        <span className="capitalize inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">{r.type}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-medium">{r.item_name}</td>
+                      <td className="py-3.5 px-4"><div>{r.customer_name}</div><div className="text-xs text-muted-foreground">{r.customer_email}</div>{r.customer_phone && <div className="text-xs text-muted-foreground">{r.customer_phone}</div>}</td>
+                      <td className="py-3.5 px-4 text-foreground/80 text-xs">{r.start_date} &rarr; {r.end_date}</td>
+                      <td className="py-3.5 px-4 text-foreground/80">{r.persons}</td>
+                      <td className="py-3.5 px-4"><StatusBadge status={r.status} /></td>
+                      <td className="py-3.5 px-4 text-right">
+                        {r.status === 'pending' ? (
+                          <div className="flex justify-end gap-1.5">
+                            <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" onClick={() => openApproveDialog(r.id, 'accommodation')}>
+                              <Check className="h-3 w-3 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => updateAccReservationStatus(r.id, 'cancelled')}>
+                              <X className="h-3 w-3 mr-1" /> Reject
+                            </Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">--</span>}
                       </td>
@@ -1170,6 +1280,83 @@ export default function AdminDashboard() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Approve Dialog */}
+      <Dialog open={approvingId !== null} onOpenChange={(open) => { if (!open) setApprovingId(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Reservation & Set Payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="approvePrice">Base Price (EUR)</Label>
+              <Input
+                id="approvePrice"
+                type="number"
+                min="0"
+                placeholder="e.g. 150"
+                value={approvePrice}
+                onChange={e => setApprovePrice(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Options (select one or both)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => togglePaymentOption('full')}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${paymentOptions.full ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${paymentOptions.full ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
+                      {paymentOptions.full && <Check className="h-2.5 w-2.5 text-white" />}
+                    </div>
+                    <div className="font-semibold text-sm">Full Payment</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 pl-6">5% discount applied</div>
+                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{fullAmount} EUR</div>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => togglePaymentOption('deposit')}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${paymentOptions.deposit ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${paymentOptions.deposit ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
+                      {paymentOptions.deposit && <Check className="h-2.5 w-2.5 text-white" />}
+                    </div>
+                    <div className="font-semibold text-sm">10% Deposit</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 pl-6">Remainder on arrival</div>
+                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{depositAmount} EUR</div>}
+                </button>
+              </div>
+            </div>
+            {basePrice > 0 && (paymentOptions.full || paymentOptions.deposit) && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
+                <div className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Email will include:</div>
+                {paymentOptions.full && (
+                  <div className="text-sm text-green-800">
+                    ✅ <span className="font-semibold">Full payment:</span> {fullAmount} EUR <span className="text-xs text-green-600">(saves {(basePrice * 0.05).toFixed(2)} EUR)</span>
+                  </div>
+                )}
+                {paymentOptions.deposit && (
+                  <div className="text-sm text-green-800">
+                    ✅ <span className="font-semibold">10% deposit:</span> {depositAmount} EUR <span className="text-xs text-green-600">(+ {(basePrice * 0.90).toFixed(2)} EUR on arrival)</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApprovingId(null)}>Cancel</Button>
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleApproveConfirm}>
+              <Check className="h-4 w-4 mr-2" /> Send Confirmation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

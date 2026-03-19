@@ -11,14 +11,14 @@ import heroApartmentImg from "@/assets/hero-apartment.jpg";
 const SERVICES = [
   {
     href: "/cars",
-    scrollTo: "cars",
+    scrollTo: undefined,
     icon: Car,
     labelKey: "home.service.car",
     fallback: "استئجار سيارة",
     image: heroCarImg,
   },
   {
-    href: "/bundles",
+    href: "/apartments",
     scrollTo: undefined,
     icon: Hotel,
     labelKey: "home.service.hotel",

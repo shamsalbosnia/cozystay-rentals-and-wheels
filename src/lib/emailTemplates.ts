@@ -9,7 +9,7 @@ function baseLayout(content: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CozyStay Rentals & Wheels</title>
+  <title>Shams Al Bosnia</title>
 </head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:32px 0;">
@@ -18,7 +18,7 @@ function baseLayout(content: string): string {
         <!-- Header -->
         <tr>
           <td style="background:${BRAND_COLOR};padding:28px 40px;text-align:center;">
-            <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">CozyStay Rentals & Wheels</p>
+            <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">Shams Al Bosnia</p>
             <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Your Travel Partner in Bosnia & Herzegovina</p>
           </td>
         </tr>
@@ -31,7 +31,7 @@ function baseLayout(content: string): string {
         <!-- Footer -->
         <tr>
           <td style="background:#2a2a2a;padding:24px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} CozyStay Rentals & Wheels. All rights reserved.</p>
+            <p style="margin:0;font-size:12px;color:#aaa;">© ${new Date().getFullYear()} Shams Al Bosnia. All rights reserved.</p>
             <p style="margin:6px 0 0;font-size:12px;color:#888;">Bosnia & Herzegovina · info@shamsalbosnia.com</p>
           </td>
         </tr>
@@ -87,9 +87,75 @@ export function reservationApprovedEmail(data: {
   item_name: string;
   start_date: string;
   end_date: string;
-  payment_link?: string;
+  base_price?: string;
+  full_payment_link?: string;
+  full_amount?: string;
+  deposit_link?: string;
+  deposit_amount?: string;
+  remainder_amount?: string;
 }): { subject: string; html: string } {
-  const paymentLink = data.payment_link || 'https://pay.shamsalbosnia.com';
+  const hasAnyPayment = data.full_payment_link || data.deposit_link;
+
+  const priceRows = [
+    ...(data.base_price ? [{ label: 'Base Price', value: data.base_price }] : []),
+  ];
+
+  // Build payment buttons section
+  let paymentSection = '';
+  if (hasAnyPayment) {
+    paymentSection += `<p style="margin:0 0 12px;font-size:15px;color:${DARK};">Please choose your preferred payment option:</p>`;
+
+    if (data.full_payment_link) {
+      paymentSection += `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+          <td style="background:#fff;border:1px solid #e8e0d0;border-radius:10px;padding:16px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <div style="font-size:15px;font-weight:700;color:${DARK};">Option A — Full Payment</div>
+                  <div style="font-size:13px;color:#666;margin-top:2px;">Pay the full amount now and save 5%</div>
+                  <div style="font-size:20px;font-weight:700;color:${BRAND_COLOR};margin-top:6px;">${data.full_amount}</div>
+                  ${data.base_price ? `<div style="font-size:12px;color:#888;margin-top:2px;">You save ${(parseFloat(data.base_price.replace(/[^\d.]/g, '')) * 0.05).toFixed(2)} EUR compared to base price</div>` : ''}
+                </td>
+                <td align="right" valign="middle" style="padding-left:16px;">
+                  <a href="${data.full_payment_link}" style="display:inline-block;background:${BRAND_COLOR};color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 24px;border-radius:8px;white-space:nowrap;">
+                    Pay Now →
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
+    }
+
+    if (data.deposit_link) {
+      paymentSection += `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+          <td style="background:#fff;border:1px solid #e8e0d0;border-radius:10px;padding:16px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <div style="font-size:15px;font-weight:700;color:${DARK};">Option B — 10% Deposit</div>
+                  <div style="font-size:13px;color:#666;margin-top:2px;">Pay a small deposit now, the rest on arrival</div>
+                  <div style="font-size:20px;font-weight:700;color:${BRAND_COLOR};margin-top:6px;">${data.deposit_amount}</div>
+                  ${data.remainder_amount ? `<div style="font-size:12px;color:#888;margin-top:2px;">Remaining ${data.remainder_amount} is due on arrival</div>` : ''}
+                </td>
+                <td align="right" valign="middle" style="padding-left:16px;">
+                  <a href="${data.deposit_link}" style="display:inline-block;background:#4a7c59;color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 24px;border-radius:8px;white-space:nowrap;">
+                    Pay Deposit →
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
+    }
+  }
+
   const content = `
     <h1 style="margin:0 0 8px;font-size:26px;color:${DARK};font-weight:700;">Your booking is confirmed! ✅</h1>
     <p style="margin:0 0 24px;font-size:15px;color:#666;">Great news, <strong>${data.customer_name}</strong>! We are pleased to confirm your reservation.</p>
@@ -98,16 +164,10 @@ export function reservationApprovedEmail(data: {
       { label: 'Booking', value: data.item_name },
       { label: 'Check-in', value: formatDate(data.start_date) },
       { label: 'Check-out', value: formatDate(data.end_date) },
+      ...priceRows,
     ])}
-    <p style="margin:0 0 16px;font-size:15px;color:${DARK};">To complete your reservation, please proceed with the payment:</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-      <tr><td align="center">
-        <a href="${paymentLink}" style="display:inline-block;background:${BRAND_COLOR};color:#fff;text-decoration:none;font-size:16px;font-weight:700;padding:14px 36px;border-radius:8px;letter-spacing:0.5px;">
-          Complete Payment →
-        </a>
-      </td></tr>
-    </table>
-    <p style="margin:0;font-size:13px;color:#888;">If you have any questions, contact us at <a href="mailto:info@shamsalbosnia.com" style="color:${BRAND_COLOR};">info@shamsalbosnia.com</a></p>
+    ${paymentSection}
+    <p style="margin:16px 0 0;font-size:13px;color:#888;">If you have any questions, contact us at <a href="mailto:info@shamsalbosnia.com" style="color:${BRAND_COLOR};">info@shamsalbosnia.com</a></p>
   `;
   return {
     subject: `✅ Booking Confirmed – ${data.item_name}`,

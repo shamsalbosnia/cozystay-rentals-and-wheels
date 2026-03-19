@@ -180,6 +180,7 @@ const VillaPropertyCard = ({ villa }: VillaPropertyCardProps) => {
         onClose={() => setIsBookingModalOpen(false)}
         type="villa"
         itemName={`${villaName} - ${selectedRoom.name}`}
+        villaId={parseInt(selectedRoom.id)}
       />
     </>
   );

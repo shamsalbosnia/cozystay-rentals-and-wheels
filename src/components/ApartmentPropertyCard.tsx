@@ -185,6 +185,7 @@ const ApartmentPropertyCard = ({ apartment }: ApartmentPropertyCardProps) => {
         onClose={() => setIsBookingModalOpen(false)}
         type="apartment"
         itemName={getApartmentNameTranslation(apartment.name)}
+        apartmentId={parseInt(apartment.rooms[0]?.id || '0')}
       />
     </>
   );

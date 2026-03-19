@@ -74,10 +74,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-16 items-center px-5 border-b border-white/10">
           <Link href="/admin" className="flex items-center gap-3 min-w-0">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[hsl(42,55%,50%)] to-[hsl(42,65%,62%)] flex items-center justify-center shadow-lg shadow-[hsl(42,55%,50%)]/20">
-              <span className="text-foreground font-bold text-sm">CS</span>
+              <span className="text-foreground font-bold text-sm">SAB</span>
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-[hsl(40,25%,92%)] text-sm leading-tight truncate">CozyStay</span>
+              <span className="font-semibold text-[hsl(40,25%,92%)] text-sm leading-tight truncate">Shams Al Bosnia</span>
               <span className="text-[11px] text-[hsl(40,25%,70%)] leading-tight">Admin Panel</span>
             </div>
           </Link>
@@ -135,9 +135,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <SheetHeader className="p-4 border-b border-white/10">
                 <SheetTitle className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[hsl(42,55%,50%)] to-[hsl(42,65%,62%)] flex items-center justify-center">
-                    <span className="text-foreground font-bold text-xs">CS</span>
+                    <span className="text-foreground font-bold text-xs">SAB</span>
                   </div>
-                  <span className="text-sm font-semibold text-[hsl(40,25%,92%)]">CozyStay Admin</span>
+                  <span className="text-sm font-semibold text-[hsl(40,25%,92%)]">Shams Al Bosnia Admin</span>
                 </SheetTitle>
               </SheetHeader>
               <div className="px-3 py-5">

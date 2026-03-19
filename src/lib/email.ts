@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const FROM = 'CozyStay <info@shamsalbosnia.com>';
+const FROM = 'Shams Al Bosnia <info@shamsalbosnia.com>';
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   try {
