@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { sendEmail } from '@/lib/email';
 import { reservationApprovedEmail, reservationRejectedEmail } from '@/lib/emailTemplates';
+import { createPayPalInvoiceLink } from '@/lib/paypal';
 
 export async function PATCH(
   req: NextRequest,
@@ -24,7 +25,10 @@ export async function PATCH(
 
   const { data, error } = await supabase
     .from('car_reservations')
-    .update(body)
+    .update({
+      status: body.status,
+      ...(body.admin_notes !== undefined && { admin_notes: body.admin_notes }),
+    })
     .eq('id', parseInt(id))
     .select('*, car:cars(name)')
     .single();
@@ -36,11 +40,48 @@ export async function PATCH(
     const itemName = (data.car as { name?: string } | null)?.name || `Car #${existing.car_id}`;
 
     if (body.status === 'confirmed') {
+      const basePrice = parseFloat(body.price) || 0;
+      const options = (body.payment_options as ('full' | 'deposit')[] | undefined) ?? [];
+
+      let fullLink: string | undefined;
+      let fullAmount: string | undefined;
+      let depositLink: string | undefined;
+      let depositAmount: string | undefined;
+
+      if (options.includes('full') && basePrice > 0) {
+        const amt = parseFloat((basePrice * 0.95).toFixed(2));
+        fullAmount = `${amt} EUR`;
+        fullLink = await createPayPalInvoiceLink({
+          customer_email: existing.customer_email,
+          customer_name: existing.customer_name,
+          item_name: `${itemName} — Full Payment (5% discount)`,
+          amount: amt,
+          note: `Full payment for ${itemName}. Includes 5% discount. Reservation: ${existing.start_date} → ${existing.end_date}.`,
+        }) ?? undefined;
+      }
+      if (options.includes('deposit') && basePrice > 0) {
+        const amt = parseFloat((basePrice * 0.10).toFixed(2));
+        depositAmount = `${amt} EUR`;
+        depositLink = await createPayPalInvoiceLink({
+          customer_email: existing.customer_email,
+          customer_name: existing.customer_name,
+          item_name: `${itemName} — 10% Deposit`,
+          amount: amt,
+          note: `10% deposit for ${itemName}. Remaining ${(basePrice * 0.90).toFixed(2)} EUR is due on arrival. Reservation: ${existing.start_date} → ${existing.end_date}.`,
+        }) ?? undefined;
+      }
+
       const { subject, html } = reservationApprovedEmail({
         customer_name: existing.customer_name,
         item_name: itemName,
         start_date: existing.start_date,
         end_date: existing.end_date,
+        base_price: basePrice > 0 ? `${basePrice} EUR` : undefined,
+        full_payment_link: fullLink,
+        full_amount: fullAmount,
+        deposit_link: depositLink,
+        deposit_amount: depositAmount,
+        remainder_amount: (options.includes('deposit') && basePrice > 0) ? `${(basePrice * 0.90).toFixed(2)} EUR` : undefined,
       });
       void sendEmail(existing.customer_email, subject, html);
     } else if (body.status === 'cancelled' || body.status === 'rejected') {

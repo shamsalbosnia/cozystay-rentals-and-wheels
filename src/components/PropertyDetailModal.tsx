@@ -21,6 +21,7 @@ import { FormInput } from "@/components/ui/form-input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import BookingModal from "@/components/BookingModal";
 import {
   Carousel,
   CarouselContent,
@@ -58,6 +59,7 @@ const PropertyDetailModal = ({ isOpen, onClose, hotel, hotelName, location }: Pr
   const { t } = useLanguage();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string>(hotel.rooms[0]?.id || "");
   const [selectedBedOption, setSelectedBedOption] = useState<string>("double");
 
@@ -245,6 +247,12 @@ const PropertyDetailModal = ({ isOpen, onClose, hotel, hotelName, location }: Pr
           </div>
           
           <div>
+            <Button
+              className="w-full mb-6 bg-amber-700 hover:bg-amber-800 text-white"
+              onClick={() => setIsBookingModalOpen(true)}
+            >
+              Book Now
+            </Button>
             <h3 className="font-semibold mb-4">{t("modal.property.interested")}</h3>
             <p className="text-muted-foreground mb-6">
               {t("modal.property.contactInfo")}
@@ -307,6 +315,13 @@ const PropertyDetailModal = ({ isOpen, onClose, hotel, hotelName, location }: Pr
           </div>
         </div>
       </DialogContent>
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        type="hotel"
+        itemName={`${hotelName} - ${selectedRoom?.name || ''}`}
+        hotelId={parseInt(selectedRoomId || '0')}
+      />
     </Dialog>
   );
 };

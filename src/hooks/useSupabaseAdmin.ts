@@ -196,10 +196,12 @@ export const useSupabaseAdmin = () => {
     } catch (err: any) { toast.error('Error deleting villa', { description: err.message }); return false; }
   };
 
-  const updateReservationStatus = async (id: number, status: string, admin_notes?: string) => {
+  const updateReservationStatus = async (id: number, status: string, admin_notes?: string, price?: string, paymentOptions?: ('full' | 'deposit')[]) => {
     try {
       const body: any = { status };
       if (admin_notes !== undefined) body.admin_notes = admin_notes;
+      if (price) body.price = price;
+      if (paymentOptions && paymentOptions.length > 0) body.payment_options = paymentOptions;
       const res = await fetch(`/api/admin/reservations/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });

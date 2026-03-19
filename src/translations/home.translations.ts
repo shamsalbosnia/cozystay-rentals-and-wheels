@@ -176,9 +176,9 @@ export const homeTranslations = {
     ar: "مسافر أعمال"
   },
   "home.testimonials.quote2": {
-    en: "Renting a car through CozyStay was a breeze. The vehicle was in perfect condition, and the pickup process was quick and easy. Will definitely use their service again.",
-    bs: "Iznajmljivanje automobila preko CozyStay-a je bilo lako. Vozilo je bilo u savršenom stanju, a proces preuzimanja je bio brz i jednostavan. Definitivno ću ponovo koristiti njihovu uslugu.",
-    ar: "كان استئجار سيارة من خلال CozyStay أمراً سهلاً. كانت المركبة في حالة مثالية، وكانت عملية الاستلام سريعة وسهلة. سأستخدم خدمتهم مرة أخرى بالتأكيد."
+    en: "Renting a car through Shams Al Bosnia was a breeze. The vehicle was in perfect condition, and the pickup process was quick and easy. Will definitely use their service again.",
+    bs: "Iznajmljivanje automobila preko Shams Al Bosnia-a je bilo lako. Vozilo je bilo u savršenom stanju, a proces preuzimanja je bio brz i jednostavan. Definitivno ću ponovo koristiti njihovu uslugu.",
+    ar: "كان استئجار سيارة من خلال Shams Al Bosnia أمراً سهلاً. كانت المركبة في حالة مثالية، وكانت عملية الاستلام سريعة وسهلة. سأستخدم خدمتهم مرة أخرى بالتأكيد."
   },
   "home.testimonials.author2": {
     en: "Michael Stevens",

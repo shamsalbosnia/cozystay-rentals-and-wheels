@@ -20,10 +20,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "apartment" | "car" | "villa" | "bundle";
+  type: "apartment" | "car" | "villa" | "hotel" | "bundle";
   itemName?: string;
   carId?: number;
   bundleId?: number;
+  hotelId?: number;
+  villaId?: number;
+  apartmentId?: number;
 }
 
 interface BookedRange {
@@ -45,7 +48,7 @@ const formSchema = z.object({
 
 type BookingFormValues = z.infer<typeof formSchema>;
 
-const BookingModal = ({ isOpen, onClose, type, itemName, carId, bundleId }: BookingModalProps) => {
+const BookingModal = ({ isOpen, onClose, type, itemName, carId, bundleId, hotelId, villaId, apartmentId }: BookingModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookedRanges, setBookedRanges] = useState<BookedRange[]>([]);
   const { t } = useLanguage();
@@ -126,6 +129,34 @@ const BookingModal = ({ isOpen, onClose, type, itemName, carId, bundleId }: Book
         return;
       }
 
+      if (type === 'hotel' || type === 'villa' || type === 'apartment') {
+        const itemId = hotelId || villaId || apartmentId;
+        const startStr = data.startDate.toISOString().split('T')[0];
+        const endStr = data.endDate.toISOString().split('T')[0];
+
+        const res = await fetch(`/api/${type}s/${itemId}/reservations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: data.firstName + (data.lastName ? ` ${data.lastName}` : ''),
+            customer_email: data.email,
+            customer_phone: data.phone,
+            start_date: startStr,
+            end_date: endStr,
+            persons: parseInt(data.persons),
+            item_name: itemName,
+          }),
+        });
+
+        if (!res.ok) throw new Error('Failed to submit');
+
+        toast.success("Reservation request sent!", {
+          description: `Your request for ${itemName || type} has been submitted. We'll confirm within 24 hours.`,
+        });
+        resetFormAndClose();
+        return;
+      }
+
       if (type === 'bundle') {
         const startStr = data.startDate.toISOString().split('T')[0];
         const endStr = data.endDate.toISOString().split('T')[0];
@@ -192,6 +223,7 @@ const BookingModal = ({ isOpen, onClose, type, itemName, carId, bundleId }: Book
           <DialogTitle>
             {type === "apartment" ? t("booking.modal.title.apartment") :
              type === "villa" ? t("booking.modal.title.villa") :
+             type === "hotel" ? "Book Hotel" :
              type === "bundle" ? "Book Bundle" :
              t("booking.modal.title.car")}
             {itemName && (
