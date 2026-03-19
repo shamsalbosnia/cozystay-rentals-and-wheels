@@ -18,6 +18,7 @@ import {
   CalendarCheck, Check, X, Clock, Hotel, TreePine, Package, ChevronDown, ChevronUp, Eye, Compass
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from 'sonner';
 import { useSupabaseAdmin } from '@/hooks/useSupabaseAdmin';
 import { Car, Apartment, CarReservation, Hotel as HotelType, Villa } from '@/types/supabase';
 import { MultiImageUpload } from '@/components/admin/MultiImageUpload';
