@@ -1,50 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+const categoryLabel: Record<string, string> = {
+  gradovi: 'Cities',
+  atrakcije: 'Attractions',
+  rute: 'Routes',
+  prakticno: 'Travel Tips',
+  sezonski: 'Seasonal',
+};
 
 export async function POST(req: NextRequest) {
   try {
     const { topic, category } = await req.json();
     if (!topic?.trim()) return NextResponse.json({ error: 'Topic is required' }, { status: 400 });
-
-    const categoryLabel: Record<string, string> = {
-      gradovi: 'Cities',
-      atrakcije: 'Attractions',
-      rute: 'Routes',
-      prakticno: 'Travel Tips',
-      sezonski: 'Seasonal',
-    };
+    if (!GROQ_API_KEY) return NextResponse.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
 
     const prompt = `You are a travel writer for Shams Al Bosnia, a premium travel agency in Bosnia & Herzegovina.
 
 Write a compelling travel blog post about: "${topic}"
 Category: ${categoryLabel[category] || 'Travel'}
 
-Return ONLY a valid JSON object with these exact fields:
+Return ONLY a valid JSON object with these exact fields, no extra text:
 {
   "title": "SEO-friendly, engaging title (max 70 chars)",
   "excerpt": "2-3 sentence hook that makes the reader want to read more (max 200 chars)",
-  "content": "Full blog post in HTML format. Use <h2>, <h3>, <p>, <ul>, <li> tags. Write 500-800 words. Include practical travel tips, what to see, best time to visit, how to get there. Write from the perspective of a knowledgeable local guide. Make it engaging and SEO-friendly.",
-  "reading_time": <number of minutes to read, integer>,
-  "image_search": "Best Wikipedia search term to find a cover image for this topic (1-3 words, English)"
-}
+  "content": "Full blog post in HTML. Use <h2>, <h3>, <p>, <ul>, <li> tags. Write 500-800 words. Include: what to see, practical tips, best time to visit, how to get there. Be specific with real facts about Bosnia & Herzegovina.",
+  "reading_time": 5,
+  "image_search": "Best Wikipedia search term for a cover image (1-3 English words)"
+}`;
 
-Write in English. Be specific, include real facts about Bosnia & Herzegovina. Do not add any text outside the JSON.`;
-
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: prompt }],
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2048,
+        temperature: 0.7,
+      }),
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    if (!groqRes.ok) {
+      const err = await groqRes.text();
+      throw new Error(`Groq error: ${err}`);
+    }
+
+    const groqData = await groqRes.json();
+    const text = groqData.choices?.[0]?.message?.content || '';
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response');
 
     const generated = JSON.parse(jsonMatch[0]);
 
-    // Try to fetch Wikipedia image for the topic
+    // Fetch Wikipedia cover image
     let image_url = '';
     try {
       const wikiRes = await fetch(
