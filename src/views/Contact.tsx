@@ -57,7 +57,7 @@ const Contact = () => {
       `;
       
       const emailSent = await sendEmail({
-        to: 'info@safeer.ba',
+        to: 'info@shamsalbosnia.com',
         subject: `Contact Form: ${data.subject}`,
         body: emailBody
       });
@@ -109,7 +109,7 @@ const Contact = () => {
                   <MapPin className="w-6 h-6 text-green-400" />
                   <div>
                     <h3 className="font-medium">{t("contact.office")}</h3>
-                    <p className="text-muted-foreground">Husnije Repca bb, Mostar 88000</p>
+                    <p className="text-muted-foreground">Milana Perloga 14a, 71000 Sarajevo</p>
                   </div>
                 </motion.div>
                 
@@ -120,7 +120,7 @@ const Contact = () => {
                   <Phone className="w-6 h-6 text-blue-500" />
                   <div>
                     <h3 className="font-medium">{t("contact.phone")}</h3>
-                    <p className="text-muted-foreground">+387 61 976 066</p>
+                    <p className="text-muted-foreground">+387 65 339 886</p>
                   </div>
                 </motion.div>
                 
@@ -131,7 +131,7 @@ const Contact = () => {
                   <Mail className="w-6 h-6 text-yellow-400" />
                   <div>
                     <h3 className="font-medium">Email</h3>
-                    <p className="text-muted-foreground">info@safeer.ba</p>
+                    <p className="text-muted-foreground">info@shamsalbosnia.com</p>
                   </div>
                 </motion.div>
                 
