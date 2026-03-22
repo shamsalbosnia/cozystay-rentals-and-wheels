@@ -42,6 +42,50 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'TravelAgency',
+              name: 'Shams Al Bosnia',
+              url: 'https://www.shamsalbosnia.com',
+              logo: 'https://www.shamsalbosnia.com/lovable-uploads/shams-albosnia-logo.png',
+              image: 'https://www.shamsalbosnia.com/og-image.jpg',
+              description: 'Car rentals, hotels, villas, apartments and tour packages in Bosnia & Herzegovina.',
+              telephone: '+38765339886',
+              email: 'info@shamsalbosnia.com',
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: 'Milana Perloga 14a',
+                addressLocality: 'Sarajevo',
+                postalCode: '71000',
+                addressCountry: 'BA',
+              },
+              geo: {
+                '@type': 'GeoCoordinates',
+                latitude: 43.8563,
+                longitude: 18.4131,
+              },
+              openingHoursSpecification: {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+                opens: '08:00',
+                closes: '20:00',
+              },
+              sameAs: ['https://www.shamsalbosnia.com'],
+              hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'Travel Services',
+                itemListElement: [
+                  { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Car Rental Bosnia' } },
+                  { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Hotel Booking Bosnia' } },
+                  { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Tour Packages Bosnia' } },
+                ],
+              },
+            }),
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
