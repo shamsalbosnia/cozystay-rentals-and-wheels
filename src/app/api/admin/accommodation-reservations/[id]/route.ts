@@ -1,3 +1,5 @@
+export const maxDuration = 30; // 30 seconds for PayPal API calls
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
