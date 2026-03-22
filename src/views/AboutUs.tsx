@@ -8,11 +8,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Eye, Target, Car, Mountain, Building, MapPin, Phone, Mail, Globe, ArrowLeft, Star, Handshake } from "lucide-react";
-import heroCarImg from "@/assets/hero-car.jpg";
+import { useState, useEffect } from "react";
+
+const BIH_IMAGES = [
+  { src: '/lovable-uploads/stari-most.jpg', label: 'Stari Most, Mostar' },
+  { src: '/lovable-uploads/bascarsija.jpg', label: 'Baščaršija, Sarajevo' },
+  { src: '/lovable-uploads/sarajevo-panorama.jpg', label: 'Sarajevo' },
+];
 
 const AboutUs = () => {
   const { t } = useLanguage();
   useAnimatedPage();
+  const [currentImg, setCurrentImg] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentImg(i => (i + 1) % BIH_IMAGES.length), 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const services = [
     {
@@ -36,13 +47,27 @@ const AboutUs = () => {
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Hero Section with luxury bg */}
+      {/* Hero Section with slideshow */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroCarImg.src})` }}
-        >
-          <div className="absolute inset-0 bg-foreground/75" />
+        <div className="absolute inset-0">
+          {BIH_IMAGES.map((img, i) => (
+            <div
+              key={img.src}
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+              style={{ backgroundImage: `url(${img.src})`, opacity: i === currentImg ? 1 : 0 }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-foreground/70" />
+          {/* Location label */}
+          <div className="absolute bottom-8 right-8 z-20 text-white/60 text-sm font-medium tracking-wide">
+            {BIH_IMAGES[currentImg].label}
+          </div>
+          {/* Dots */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {BIH_IMAGES.map((_, i) => (
+              <button key={i} onClick={() => setCurrentImg(i)} className={`w-2 h-2 rounded-full transition-all ${i === currentImg ? 'bg-white scale-125' : 'bg-white/40'}`} />
+            ))}
+          </div>
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -149,7 +174,7 @@ const AboutUs = () => {
       <section className="relative py-24 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroCarImg.src})` }}
+          style={{ backgroundImage: `url(/lovable-uploads/bascarsija.jpg)` }}
         >
           <div className="absolute inset-0 bg-foreground/85" />
         </div>
