@@ -78,7 +78,8 @@ const HeroSection = () => {
                 <img
                   src={service.image.src}
                   alt={service.fallback}
-                  loading="lazy"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 {/* Overlay */}

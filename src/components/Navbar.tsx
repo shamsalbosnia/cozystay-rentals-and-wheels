@@ -48,10 +48,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo - right side in RTL */}
           <Link href="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/shams-albosnia-logo.png" 
-              alt="شمس البوسنة" 
-              className="h-12 md:h-14"
+            <img
+              src="/lovable-uploads/shams-albosnia-logo.png"
+              alt="شمس البوسنة"
+              width={56}
+              height={56}
+              className="h-12 md:h-14 w-auto"
             />
           </Link>
 
