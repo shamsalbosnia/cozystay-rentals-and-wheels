@@ -13,7 +13,7 @@ const CookiePolicy = () => {
         <h1 className="text-4xl font-bold mb-8">Cookie Policy</h1>
         <div className="prose max-w-none">
           <p className="mb-4">
-            This Cookie Policy explains how SAFEER uses cookies and similar technologies on our website.
+            This Cookie Policy explains how Shams Al Bosnia uses cookies and similar technologies on our website.
           </p>
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">1. What Are Cookies</h2>
