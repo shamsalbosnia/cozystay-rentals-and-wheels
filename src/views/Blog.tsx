@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/home/FooterSection';
 import { motion } from 'framer-motion';
 import { Clock, Tag } from 'lucide-react';
+import Image from 'next/image';
 
 const CATEGORIES = [
   { value: '', label: 'All' },
@@ -85,8 +86,8 @@ const Blog = () => {
                   className="cursor-pointer group rounded-2xl border border-border/50 bg-card overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1"
                 >
                   {post.image_url ? (
-                    <div className="h-48 overflow-hidden">
-                      <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="relative h-48 overflow-hidden">
+                      <Image src={post.image_url} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
                     </div>
                   ) : (
                     <div className="h-48 bg-gradient-to-br from-amber-100 to-yellow-50 flex items-center justify-center">
