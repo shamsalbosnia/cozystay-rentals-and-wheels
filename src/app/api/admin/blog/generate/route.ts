@@ -37,7 +37,7 @@ Return ONLY a valid JSON object with these exact fields, no extra text:
         'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2048,
         temperature: 0.7,
