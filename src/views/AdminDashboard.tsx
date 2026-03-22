@@ -1485,8 +1485,35 @@ export default function AdminDashboard() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Image URL</Label>
-                    <Input className="mt-1" value={blogForm.image_url} onChange={e => setBlogForm(p => ({...p, image_url: e.target.value}))} placeholder="https://..." />
+                    <Label>Cover Image</Label>
+                    <div className="mt-1 space-y-2">
+                      {blogForm.image_url && (
+                        <img src={blogForm.image_url} alt="cover" className="w-full h-32 object-cover rounded-lg border border-border" />
+                      )}
+                      <div className="flex gap-2">
+                        <Input value={blogForm.image_url} onChange={e => setBlogForm(p => ({...p, image_url: e.target.value}))} placeholder="https://... or upload below" className="flex-1" />
+                        <label className="cursor-pointer">
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const fd = new FormData();
+                            fd.append('file', file);
+                            fd.append('bucket', 'blog-images');
+                            const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+                            if (res.ok) {
+                              const { url } = await res.json();
+                              setBlogForm(p => ({...p, image_url: url}));
+                              toast.success('Image uploaded');
+                            } else {
+                              toast.error('Upload failed');
+                            }
+                          }} />
+                          <span className="inline-flex items-center gap-1 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-sm cursor-pointer whitespace-nowrap">
+                            ↑ Upload
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <Label>Reading Time (min)</Label>
