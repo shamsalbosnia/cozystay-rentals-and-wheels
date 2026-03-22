@@ -39,7 +39,7 @@ const FooterSection = () => {
               <li><Link href="/apartments" className="text-background/60 hover:text-primary transition-colors text-sm">{t("footer.apartments", "Apartments")}</Link></li>
               <li><Link href="/bundles" className="text-background/60 hover:text-primary transition-colors text-sm">{t("nav.bundles", "Bundles")}</Link></li>
               <li><Link href="/#testimonials" className="text-background/60 hover:text-primary transition-colors text-sm">{t("footer.testimonials", "Testimonials")}</Link></li>
-              <li><Link href="/#booking" className="text-background/60 hover:text-primary transition-colors text-sm">{t("footer.bookNow", "Book Now")}</Link></li>
+              <li><Link href="/contact" className="text-background/60 hover:text-primary transition-colors text-sm">{t("footer.contact", "Contact Us")}</Link></li>
             </ul>
           </div>
           
@@ -70,17 +70,16 @@ const FooterSection = () => {
         </div>
         
         <div className="mt-16 pt-8 border-t border-background/10 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-background/40 text-xs uppercase tracking-wider">
-            {t("footer.copyright", "© {year} Shams Albosnia. All rights reserved.").replace("{year}", currentYear.toString())}
+          <p className="text-background/60 text-xs uppercase tracking-wider">
+            {t("footer.copyright", "© {year} Shams Al Bosnia. All rights reserved.").replace("{year}", currentYear.toString())}
           </p>
-          
-          <div className="mt-4 md:mt-0 flex space-x-6">
-            <a href="https://www.instagram.com/shamsalbosnia/" target="_blank" rel="noopener noreferrer" className="text-background/40 hover:text-primary transition-colors">
-              <span className="sr-only">Instagram</span>
+
+          <div className="mt-4 md:mt-0 flex space-x-4">
+            <a href="https://www.instagram.com/shamsalbosnia/" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" className="text-background/60 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
               <Instagram className="h-5 w-5" />
             </a>
-            
-            <a href="https://www.tiktok.com/@shamsalbosnia" target="_blank" rel="noopener noreferrer" className="text-background/40 hover:text-primary transition-colors">
+
+            <a href="https://www.tiktok.com/@shamsalbosnia" target="_blank" rel="noopener noreferrer" aria-label="Follow us on TikTok" className="text-background/60 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
               <span className="sr-only">TikTok</span>
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M19.321 5.562a5.124 5.124 0 0 1-.443-.258 6.228 6.228 0 0 1-1.137-.966c-.849-.849-1.307-1.849-1.307-2.849V1h-3v11.6c0 2.4-1.9 4.3-4.3 4.3s-4.3-1.9-4.3-4.3 1.9-4.3 4.3-4.3c.3 0 .6 0 .9.1V5.1c-.3 0-.6-.1-.9-.1-4.8 0-8.7 3.9-8.7 8.7s3.9 8.7 8.7 8.7 8.7-3.9 8.7-8.7V8.8c1.3.8 2.8 1.3 4.4 1.3V6.7c-.8 0-1.5-.4-2.021-1.138z"/>

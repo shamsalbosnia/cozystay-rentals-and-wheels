@@ -69,7 +69,7 @@ const Navbar = () => {
                 {t(labelKey, fallback)}
               </Link>
             ))}
-            <button className="text-primary-foreground/80 hover:text-primary transition-colors">
+            <button aria-label="Search" className="text-primary-foreground/80 hover:text-primary transition-colors">
               <Search className="h-5 w-5" />
             </button>
             <LanguageSwitcher />
