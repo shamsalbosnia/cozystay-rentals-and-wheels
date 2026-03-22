@@ -12,7 +12,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Phone, Mail, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { sendEmail } from "@/utils/emailSender";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { FormInput } from "@/components/ui/form-input";
 
@@ -43,34 +42,16 @@ const Contact = () => {
   
   const handleSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
-    
     try {
-      const emailBody = `
-        Contact Form Submission:
-        
-        Name: ${data.name}
-        Email: ${data.email}
-        Subject: ${data.subject}
-        
-        Message:
-        ${data.message}
-      `;
-      
-      const emailSent = await sendEmail({
-        to: 'info@shamsalbosnia.com',
-        subject: `Contact Form: ${data.subject}`,
-        body: emailBody
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
-      
-      if (emailSent) {
-        toast.success("Message sent successfully!");
-        // Reset form fields
-        form.reset();
-      } else {
-        toast.error("Failed to send message. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error sending contact form:", error);
+      if (!res.ok) throw new Error('Failed to send');
+      toast.success("Message sent successfully!");
+      form.reset();
+    } catch {
       toast.error("An error occurred. Please try again later.");
     } finally {
       setIsSubmitting(false);
