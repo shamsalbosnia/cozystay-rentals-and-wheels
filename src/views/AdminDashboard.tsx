@@ -96,6 +96,7 @@ export default function AdminDashboard() {
   const [approvingType, setApprovingType] = useState<'car' | 'accommodation'>('car');
   const [approvePrice, setApprovePrice] = useState('');
   const [paymentOptions, setPaymentOptions] = useState({ full: true, deposit: false });
+  const [dialogMode, setDialogMode] = useState<'approve' | 'resend'>('approve');
 
   const togglePaymentOption = (opt: 'full' | 'deposit') => {
     setPaymentOptions(prev => ({ ...prev, [opt]: !prev[opt] }));
@@ -106,19 +107,65 @@ export default function AdminDashboard() {
     setApprovingType(type);
     setApprovePrice('');
     setPaymentOptions({ full: true, deposit: false });
+    setDialogMode('approve');
+  };
+
+  const openResendDialog = (id: number, type: 'car' | 'accommodation') => {
+    setApprovingId(id);
+    setApprovingType(type);
+    setApprovePrice('');
+    setPaymentOptions({ full: true, deposit: true });
+    setDialogMode('resend');
   };
 
   const handleApproveConfirm = async () => {
     if (approvingId === null) return;
     const selectedOptions = (Object.keys(paymentOptions) as ('full' | 'deposit')[]).filter(k => paymentOptions[k]);
-    if (approvingType === 'car') {
-      await updateReservationStatus(approvingId, 'confirmed', undefined, approvePrice || undefined, selectedOptions);
+
+    if (dialogMode === 'resend') {
+      try {
+        const endpoint = approvingType === 'car'
+          ? `/api/admin/reservations/${approvingId}/resend`
+          : `/api/admin/accommodation-reservations/${approvingId}/resend`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price: approvePrice, payment_options: selectedOptions }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        toast.success('Offer email resent successfully');
+      } catch (err: any) {
+        toast.error('Failed to resend offer', { description: err.message });
+      }
     } else {
-      await updateAccReservationStatus(approvingId, 'confirmed', approvePrice || undefined, selectedOptions);
+      if (approvingType === 'car') {
+        await updateReservationStatus(approvingId, 'confirmed', undefined, approvePrice || undefined, selectedOptions);
+      } else {
+        await updateAccReservationStatus(approvingId, 'confirmed', approvePrice || undefined, selectedOptions);
+      }
     }
     setApprovingId(null);
     setApprovePrice('');
     setPaymentOptions({ full: true, deposit: false });
+  };
+
+  // ── Cancel confirmed reservation ──
+  const [cancelConfirmId, setCancelConfirmId] = useState<number | null>(null);
+  const [cancelConfirmType, setCancelConfirmType] = useState<'car' | 'accommodation'>('car');
+
+  const openCancelConfirm = (id: number, type: 'car' | 'accommodation') => {
+    setCancelConfirmId(id);
+    setCancelConfirmType(type);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (cancelConfirmId === null) return;
+    if (cancelConfirmType === 'car') {
+      await updateReservationStatus(cancelConfirmId, 'cancelled');
+    } else {
+      await updateAccReservationStatus(cancelConfirmId, 'cancelled');
+    }
+    setCancelConfirmId(null);
   };
 
   const basePrice = parseFloat(approvePrice) || 0;
@@ -882,6 +929,15 @@ export default function AdminDashboard() {
                               <X className="h-3 w-3 mr-1" /> Reject
                             </Button>
                           </div>
+                        ) : r.status === 'confirmed' ? (
+                          <div className="flex justify-end gap-1.5">
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => openResendDialog(r.id!, 'car')}>
+                              ✉ Resend
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => openCancelConfirm(r.id!, 'car')}>
+                              <X className="h-3 w-3 mr-1" /> Cancel
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">--</span>
                         )}
@@ -1076,6 +1132,15 @@ export default function AdminDashboard() {
                             </Button>
                             <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => updateAccReservationStatus(r.id, 'cancelled')}>
                               <X className="h-3 w-3 mr-1" /> Reject
+                            </Button>
+                          </div>
+                        ) : r.status === 'confirmed' ? (
+                          <div className="flex justify-end gap-1.5">
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => openResendDialog(r.id, 'accommodation')}>
+                              ✉ Resend
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-3 text-xs hover:bg-destructive/10 hover:text-destructive" onClick={() => openCancelConfirm(r.id, 'accommodation')}>
+                              <X className="h-3 w-3 mr-1" /> Cancel
                             </Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">--</span>}
@@ -1282,11 +1347,31 @@ export default function AdminDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Approve Dialog */}
+      {/* Cancel Confirm Dialog */}
+      <Dialog open={cancelConfirmId !== null} onOpenChange={(open) => { if (!open) setCancelConfirmId(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Cancel Reservation?</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-muted-foreground">
+              Ova rezervacija će biti otkazana i datumi će biti slobodni. Klijent će primiti email o otkazivanju.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelConfirmId(null)}>Nazad</Button>
+            <Button variant="destructive" onClick={handleCancelConfirm}>
+              <X className="h-4 w-4 mr-2" /> Potvrdi otkazivanje
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve / Resend Dialog */}
       <Dialog open={approvingId !== null} onOpenChange={(open) => { if (!open) setApprovingId(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm Reservation & Set Payment</DialogTitle>
+            <DialogTitle>{dialogMode === 'resend' ? '✉ Resend Payment Offer' : 'Confirm Reservation & Set Payment'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -1353,7 +1438,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setApprovingId(null)}>Cancel</Button>
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleApproveConfirm}>
-              <Check className="h-4 w-4 mr-2" /> Send Confirmation
+              <Check className="h-4 w-4 mr-2" /> {dialogMode === 'resend' ? 'Resend Offer' : 'Send Confirmation'}
             </Button>
           </DialogFooter>
         </DialogContent>
