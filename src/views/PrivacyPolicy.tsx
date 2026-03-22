@@ -13,7 +13,7 @@ const PrivacyPolicy = () => {
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         <div className="prose max-w-none">
           <p className="mb-4">
-            At SAFEER, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our website and services.
+            At Shams Al Bosnia, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our website and services.
           </p>
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">1. Information We Collect</h2>

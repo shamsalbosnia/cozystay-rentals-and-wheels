@@ -77,6 +77,8 @@ export default function AdminDashboard() {
   const [showBlogForm, setShowBlogForm] = useState(false);
   const [wikiQuery, setWikiQuery] = useState('');
   const [wikiLoading, setWikiLoading] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   const fetchBlogPosts = React.useCallback(async () => {
     try {
@@ -100,6 +102,33 @@ export default function AdminDashboard() {
       }
     } catch { toast.error('Failed to fetch Wikipedia'); }
     finally { setWikiLoading(false); }
+  };
+
+  const generateBlogPost = async () => {
+    if (!aiTopic.trim()) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch('/api/admin/blog/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: aiTopic, category: blogForm.category }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setBlogForm(prev => ({
+        ...prev,
+        title: data.title || prev.title,
+        excerpt: data.excerpt || prev.excerpt,
+        content: data.content || prev.content,
+        reading_time: data.reading_time || prev.reading_time,
+        image_url: data.image_url || prev.image_url,
+      }));
+      toast.success('Blog post generated! Review and publish.');
+    } catch (err: any) {
+      toast.error('Generation failed', { description: err.message });
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleBlogSave = async () => {
@@ -1525,12 +1554,45 @@ export default function AdminDashboard() {
                   <Textarea className="mt-1" rows={2} value={blogForm.excerpt} onChange={e => setBlogForm(p => ({...p, excerpt: e.target.value}))} placeholder="Short description shown in blog list..." />
                 </div>
 
-                {/* Wikipedia helper */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Wikipedia Content Helper</p>
-                  <p className="text-xs text-blue-600">Search Wikipedia and append the summary to your content as a starting point.</p>
+                {/* AI Generator */}
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">✨ AI Blog Generator</p>
+                    <p className="text-xs text-purple-600 mt-0.5">Enter a topic and AI will generate title, excerpt, content and cover image.</p>
+                  </div>
                   <div className="flex gap-2">
-                    <Input value={wikiQuery} onChange={e => setWikiQuery(e.target.value)} placeholder="e.g. Sarajevo, Kravica Waterfall..." className="bg-white" onKeyDown={e => e.key === 'Enter' && fetchWikipedia()} />
+                    <Input
+                      value={aiTopic}
+                      onChange={e => setAiTopic(e.target.value)}
+                      placeholder="e.g. Kravica Waterfall, Mostar Old Town, Rent a Car Tips..."
+                      className="bg-white"
+                      onKeyDown={e => e.key === 'Enter' && generateBlogPost()}
+                      disabled={aiLoading}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={generateBlogPost}
+                      disabled={aiLoading || !aiTopic.trim()}
+                      className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap"
+                    >
+                      {aiLoading ? (
+                        <><Clock className="h-4 w-4 animate-spin mr-1" /> Generating...</>
+                      ) : (
+                        '✨ Generate'
+                      )}
+                    </Button>
+                  </div>
+                  {aiLoading && (
+                    <p className="text-xs text-purple-500 animate-pulse">Writing your blog post... this takes ~10 seconds.</p>
+                  )}
+                </div>
+
+                {/* Wikipedia helper */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Wikipedia Content Helper</p>
+                  <p className="text-xs text-blue-600">Append Wikipedia summary to content as extra reference.</p>
+                  <div className="flex gap-2">
+                    <Input value={wikiQuery} onChange={e => setWikiQuery(e.target.value)} placeholder="e.g. Sarajevo, Kravica Waterfall..." className="bg-white text-sm" onKeyDown={e => e.key === 'Enter' && fetchWikipedia()} />
                     <Button size="sm" variant="outline" onClick={fetchWikipedia} disabled={wikiLoading}>
                       {wikiLoading ? <Clock className="h-4 w-4 animate-spin" /> : 'Fetch'}
                     </Button>
