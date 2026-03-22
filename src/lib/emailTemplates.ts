@@ -314,3 +314,54 @@ export function accommodationReservationEmail(data: {
     html: baseLayout(content),
   };
 }
+
+// ── Contact request notification (to admin) ──
+export function contactRequestAdminEmail(data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): { subject: string; html: string } {
+  const content = `
+    <h1 style="margin:0 0 8px;font-size:22px;color:${DARK};font-weight:700;">📩 New Contact Request</h1>
+    <p style="margin:0 0 24px;font-size:14px;color:#666;">Someone submitted a message via the Contact Us page.</p>
+    <hr style="border:none;border-top:1px solid #e8e0d0;margin:0 0 24px;" />
+    ${detailsTable([
+      { label: 'Name', value: data.name },
+      { label: 'Email', value: data.email },
+      { label: 'Subject', value: data.subject },
+    ])}
+    <div style="margin:20px 0;padding:16px;background:#fff;border-left:4px solid ${BRAND_COLOR};border-radius:4px;">
+      <p style="margin:0 0 6px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Message</p>
+      <p style="margin:0;font-size:14px;color:${DARK};white-space:pre-wrap;">${data.message}</p>
+    </div>
+    <p style="margin:0;font-size:13px;color:#888;">Reply directly from the <strong>Admin Panel → Inquiries</strong> tab.</p>
+  `;
+  return {
+    subject: `📩 New Inquiry: ${data.subject}`,
+    html: baseLayout(content),
+  };
+}
+
+// ── Contact reply (to customer) ──
+export function contactReplyEmail(data: {
+  customer_name: string;
+  subject: string;
+  reply: string;
+}): { subject: string; html: string } {
+  const content = `
+    <h1 style="margin:0 0 8px;font-size:22px;color:${DARK};font-weight:700;">Re: ${data.subject}</h1>
+    <p style="margin:0 0 24px;font-size:14px;color:#666;">Hi <strong>${data.customer_name}</strong>, we have replied to your inquiry.</p>
+    <hr style="border:none;border-top:1px solid #e8e0d0;margin:0 0 24px;" />
+    <div style="margin:0 0 24px;padding:20px;background:#fff;border-left:4px solid ${BRAND_COLOR};border-radius:4px;">
+      <p style="margin:0 0 6px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Our reply</p>
+      <p style="margin:0;font-size:15px;color:${DARK};white-space:pre-wrap;">${data.reply}</p>
+    </div>
+    <p style="margin:0;font-size:13px;color:#888;">If you have further questions, feel free to reply to this email or contact us at <a href="mailto:info@shamsalbosnia.com" style="color:${BRAND_COLOR};">info@shamsalbosnia.com</a></p>
+  `;
+  return {
+    subject: `Re: ${data.subject} — Shams Al Bosnia`,
+    html: baseLayout(content),
+  };
+}
+
