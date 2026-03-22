@@ -1,6 +1,21 @@
 import type { Metadata } from 'next';
+import { Tajawal, Playfair_Display } from 'next/font/google';
 import { Providers } from './Providers';
 import '@/index.css';
+
+const tajawal = Tajawal({
+  subsets: ['arabic', 'latin'],
+  weight: ['200', '300', '400', '500', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-tajawal',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-playfair',
+});
 
 export const metadata: Metadata = {
   title: 'شمس البوسنة | Shams Albosnia',
@@ -34,13 +49,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning className={`${tajawal.variable} ${playfair.variable}`}>
+      <head />
       <body>
         <script
           type="application/ld+json"

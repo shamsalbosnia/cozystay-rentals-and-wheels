@@ -22,10 +22,12 @@ const FooterSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-1">
             <Link href="/" className="inline-block">
-              <img 
-                src="/lovable-uploads/shams-albosnia-logo.png" 
-                alt="Shams Albosnia" 
-                className="h-14 mb-4"
+              <img
+                src="/lovable-uploads/shams-albosnia-logo.png"
+                alt="Shams Albosnia"
+                width={56}
+                height={56}
+                className="h-14 mb-4 w-auto"
               />
             </Link>
             <p className="mt-2 text-background/60 max-w-xs text-sm font-light leading-relaxed">
