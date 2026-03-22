@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   CarFront, Building2, Plus, Search, Edit, Trash2,
-  CalendarCheck, Check, X, Clock, Hotel, TreePine, Package, ChevronDown, ChevronUp, Eye, Compass
+  CalendarCheck, Check, X, Clock, Hotel, TreePine, Package, ChevronDown, ChevronUp, Eye, Compass, Mail, Send, MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
@@ -66,6 +66,42 @@ export default function AdminDashboard() {
     deleteCar, deleteApartment, deleteHotel, deleteVilla,
     updateReservationStatus, createReservation,
   } = useSupabaseAdmin();
+
+  // ── Contact requests state ──
+  const [contactRequests, setContactRequests] = useState<any[]>([]);
+  const [replyingId, setReplyingId] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyLoading, setReplyLoading] = useState(false);
+  const [expandedInquiryId, setExpandedInquiryId] = useState<number | null>(null);
+
+  const fetchContactRequests = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/contact-requests');
+      if (res.ok) setContactRequests(await res.json());
+    } catch {}
+  }, []);
+  React.useEffect(() => { fetchContactRequests(); }, [fetchContactRequests]);
+
+  const handleSendReply = async (id: number) => {
+    if (!replyText.trim()) return;
+    setReplyLoading(true);
+    try {
+      const res = await fetch(`/api/admin/contact-requests/${id}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply: replyText }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success('Reply sent successfully');
+      setReplyingId(null);
+      setReplyText('');
+      fetchContactRequests();
+    } catch (err: any) {
+      toast.error('Failed to send reply', { description: err.message });
+    } finally {
+      setReplyLoading(false);
+    }
+  };
 
   // ── Accommodation reservations state ──
   const [accReservations, setAccReservations] = useState<any[]>([]);
@@ -440,6 +476,14 @@ export default function AdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="bundles" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2 rounded-md">
             <Package className="w-4 h-4" /> Bundles
+          </TabsTrigger>
+          <TabsTrigger value="inquiries" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2 rounded-md">
+            <Mail className="w-4 h-4" /> Inquiries
+            {contactRequests.filter((r: any) => r.status === 'new').length > 0 && (
+              <span className="ml-1 h-5 w-5 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
+                {contactRequests.filter((r: any) => r.status === 'new').length}
+              </span>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -1344,6 +1388,105 @@ export default function AdminDashboard() {
               </Card>
             </>
           )}
+        </TabsContent>
+
+        {/* ── INQUIRIES TAB ── */}
+        <TabsContent value="inquiries">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-lg font-semibold">Customer Inquiries</h2>
+              <p className="text-sm text-muted-foreground">Messages received via the Contact Us page.</p>
+            </div>
+          </div>
+          <Card className="border-border/50 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-foreground/[0.03] border-b border-border/50">
+                    <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Customer</th>
+                    <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Subject</th>
+                    <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Date</th>
+                    <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground/80">Status</th>
+                    <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wider text-foreground/80">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {contactRequests.length === 0 ? (
+                    <tr><td colSpan={5} className="py-16 text-center">
+                      <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground">No inquiries yet</p>
+                    </td></tr>
+                  ) : contactRequests.map((r: any) => (
+                    <React.Fragment key={r.id}>
+                      <tr className={`hover:bg-foreground/[0.02] transition-colors ${r.status === 'new' ? 'bg-blue-50/50' : ''}`}>
+                        <td className="py-3.5 px-4">
+                          <div className="font-medium">{r.name}</div>
+                          <div className="text-xs text-muted-foreground">{r.email}</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-medium">{r.subject}</td>
+                        <td className="py-3.5 px-4 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                            r.status === 'new' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                            r.status === 'replied' ? 'bg-green-100 text-green-800 border-green-200' :
+                            'bg-gray-100 text-gray-700 border-gray-200'
+                          }`}>
+                            {r.status === 'new' ? '● New' : r.status === 'replied' ? '✓ Replied' : 'Read'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex justify-end gap-1.5">
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setExpandedInquiryId(expandedInquiryId === r.id ? null : r.id)}>
+                              <Eye className="h-3 w-3 mr-1" /> {expandedInquiryId === r.id ? 'Hide' : 'View'}
+                            </Button>
+                            {r.status !== 'replied' && (
+                              <Button size="sm" className="h-7 px-3 text-xs bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => { setReplyingId(r.id); setReplyText(''); setExpandedInquiryId(r.id); }}>
+                                <Send className="h-3 w-3 mr-1" /> Reply
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedInquiryId === r.id && (
+                        <tr className="bg-muted/30">
+                          <td colSpan={5} className="px-6 py-4 space-y-4">
+                            <div className="bg-white rounded-lg p-4 border border-border/50">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Message</p>
+                              <p className="text-sm text-foreground whitespace-pre-wrap">{r.message}</p>
+                            </div>
+                            {r.admin_reply && (
+                              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-green-700 mb-2">Your Reply <span className="text-green-500 normal-case font-normal">· {r.replied_at ? new Date(r.replied_at).toLocaleDateString() : ''}</span></p>
+                                <p className="text-sm text-foreground whitespace-pre-wrap">{r.admin_reply}</p>
+                              </div>
+                            )}
+                            {replyingId === r.id && (
+                              <div className="space-y-3">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Write Reply</p>
+                                <Textarea
+                                  value={replyText}
+                                  onChange={e => setReplyText(e.target.value)}
+                                  placeholder="Type your reply..."
+                                  rows={4}
+                                  className="resize-none"
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <Button size="sm" variant="outline" onClick={() => setReplyingId(null)}>Cancel</Button>
+                                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" disabled={replyLoading || !replyText.trim()} onClick={() => handleSendReply(r.id)}>
+                                    <Send className="h-3 w-3 mr-1" /> {replyLoading ? 'Sending...' : 'Send Reply'}
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
 
