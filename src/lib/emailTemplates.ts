@@ -365,3 +365,40 @@ export function contactReplyEmail(data: {
   };
 }
 
+export function adminInvoiceNotificationEmail(data: {
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  item_name: string;
+  item_type: string;
+  start_date: string;
+  end_date: string;
+  base_price: string;
+  invoice_id: string;
+  payment_summary: string;
+}): { subject: string; html: string } {
+  const content = `
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:${DARK};">📋 New Confirmed Booking</p>
+    <p style="margin:0 0 24px;font-size:15px;color:#555;">A reservation has been confirmed and the invoice has been sent to the customer. PDF invoice is attached.</p>
+
+    ${detailsTable([
+      { label: 'Invoice #', value: data.invoice_id },
+      { label: 'Customer', value: data.customer_name },
+      { label: 'Email', value: data.customer_email },
+      ...(data.customer_phone ? [{ label: 'Phone', value: data.customer_phone }] : []),
+      { label: 'Booking', value: data.item_name },
+      { label: 'Type', value: data.item_type },
+      { label: 'Check-in', value: formatDate(data.start_date) },
+      { label: 'Check-out', value: formatDate(data.end_date) },
+      { label: 'Base Price', value: data.base_price },
+      { label: 'Payment', value: data.payment_summary },
+    ])}
+
+    <p style="margin:20px 0 0;font-size:13px;color:#888;">PDF invoice is attached to this email.</p>
+  `;
+  return {
+    subject: `[New Booking] ${data.item_name} – ${data.customer_name} (${data.invoice_id})`,
+    html: baseLayout(content),
+  };
+}
+

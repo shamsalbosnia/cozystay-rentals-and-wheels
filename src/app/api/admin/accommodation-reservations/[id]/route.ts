@@ -4,8 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createSupabaseServerClient } from '@/lib/supabaseServer';
 import { sendEmail } from '@/lib/email';
-import { reservationApprovedEmail, reservationRejectedEmail } from '@/lib/emailTemplates';
+import { reservationApprovedEmail, reservationRejectedEmail, adminInvoiceNotificationEmail } from '@/lib/emailTemplates';
 import { createPayPalInvoiceLink } from '@/lib/paypal';
+import { generateInvoicePDF } from '@/lib/generateInvoicePDF';
 
 export async function PATCH(
   req: NextRequest,
@@ -80,7 +81,62 @@ export async function PATCH(
         deposit_amount: depositAmount,
         remainder_amount: (options.includes('deposit') && basePrice > 0) ? `${(basePrice * 0.90).toFixed(2)} EUR` : undefined,
       });
-      void sendEmail(existing.customer_email, subject, html);
+
+      // Generate PDF invoice
+      const invoiceId = `SAB-${new Date().getFullYear()}-${id}`;
+      const invoiceDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const itemTypeMap: Record<string, 'Hotel' | 'Apartment' | 'Villa'> = {
+        hotel: 'Hotel', apartment: 'Apartment', villa: 'Villa',
+      };
+      const pdfItemType = itemTypeMap[existing.type] ?? 'Hotel';
+      let pdfAttachment: { filename: string; content: string } | undefined;
+      try {
+        const pdfBuffer = await generateInvoicePDF({
+          invoiceId,
+          date: invoiceDate,
+          customerName: existing.customer_name,
+          customerEmail: existing.customer_email,
+          customerPhone: existing.customer_phone ?? undefined,
+          itemName,
+          itemType: pdfItemType,
+          startDate: existing.start_date,
+          endDate: existing.end_date,
+          persons: existing.persons ?? undefined,
+          basePrice,
+          paymentOptions: options,
+          fullAmount: fullAmount ? parseFloat(fullAmount) : undefined,
+          depositAmount: depositAmount ? parseFloat(depositAmount) : undefined,
+          remainderAmount: (options.includes('deposit') && basePrice > 0) ? parseFloat((basePrice * 0.90).toFixed(2)) : undefined,
+        });
+        pdfAttachment = { filename: `Invoice-${invoiceId}.pdf`, content: pdfBuffer.toString('base64') };
+      } catch (pdfErr) {
+        console.error('[PDF] Failed to generate invoice PDF', pdfErr);
+      }
+
+      const attachments = pdfAttachment ? [pdfAttachment] : undefined;
+
+      // Send to customer
+      void sendEmail(existing.customer_email, subject, html, attachments);
+
+      // Send copy to admin
+      const paymentSummary = options.includes('full') && options.includes('deposit')
+        ? `Full: ${fullAmount} EUR / Deposit: ${depositAmount} EUR`
+        : options.includes('full')
+        ? `Full payment: ${fullAmount} EUR`
+        : `Deposit: ${depositAmount} EUR`;
+      const { subject: adminSubject, html: adminHtml } = adminInvoiceNotificationEmail({
+        customer_name: existing.customer_name,
+        customer_email: existing.customer_email,
+        customer_phone: existing.customer_phone ?? undefined,
+        item_name: itemName,
+        item_type: pdfItemType,
+        start_date: existing.start_date,
+        end_date: existing.end_date,
+        base_price: `${basePrice} EUR`,
+        invoice_id: invoiceId,
+        payment_summary: paymentSummary,
+      });
+      void sendEmail('info@shamsalbosnia.com', adminSubject, adminHtml, attachments);
     } else if (body.status === 'cancelled') {
       const { subject, html } = reservationRejectedEmail({
         customer_name: existing.customer_name,

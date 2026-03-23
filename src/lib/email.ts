@@ -2,7 +2,17 @@ import { Resend } from 'resend';
 
 const FROM = 'Shams Al Bosnia <info@shamsalbosnia.com>';
 
-export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+export interface EmailAttachment {
+  filename: string;
+  content: string; // base64
+}
+
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: EmailAttachment[]
+): Promise<void> {
   try {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -10,7 +20,13 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       return;
     }
     const resend = new Resend(apiKey);
-    await resend.emails.send({ from: FROM, to, subject, html });
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject,
+      html,
+      ...(attachments && attachments.length > 0 && { attachments }),
+    });
   } catch (err) {
     // Never block the reservation on email failure — just log it
     console.error('[EMAIL] Failed to send email to', to, err);

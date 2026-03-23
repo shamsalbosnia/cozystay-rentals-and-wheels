@@ -1066,6 +1066,11 @@ export default function AdminDashboard() {
                           </div>
                         ) : r.status === 'confirmed' ? (
                           <div className="flex justify-end gap-1.5">
+                            <a href={`/api/admin/reservations/${r.id}/invoice`} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                                📄 Invoice
+                              </Button>
+                            </a>
                             <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => openResendDialog(r.id!, 'car')}>
                               ✉ Resend
                             </Button>
@@ -1271,6 +1276,11 @@ export default function AdminDashboard() {
                           </div>
                         ) : r.status === 'confirmed' ? (
                           <div className="flex justify-end gap-1.5">
+                            <a href={`/api/admin/accommodation-reservations/${r.id}/invoice`} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                                📄 Invoice
+                              </Button>
+                            </a>
                             <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => openResendDialog(r.id, 'accommodation')}>
                               ✉ Resend
                             </Button>
