@@ -70,8 +70,8 @@ export const footerTranslations = {
     ar: "سياسة ملفات تعريف الارتباط"
   },
   "footer.copyright": {
-    en: "© {year} SAFEER. All rights reserved.",
-    bs: "© {year} SAFEER. Sva prava zadržana.",
-    ar: "© {year} SAFEER. جميع الحقوق محفوظة."
+    en: "© {year} Shams Al Bosnia. All rights reserved.",
+    bs: "© {year} Shams Al Bosnia. Sva prava zadržana.",
+    ar: "© {year} Shams Al Bosnia. جميع الحقوق محفوظة."
   }
 };

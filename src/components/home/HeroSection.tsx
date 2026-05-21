@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Car, Hotel, Home, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
-import heroCarImg from "@/assets/hero-car.jpg";
+import heroCarImg from "@/assets/hero-car.png";
 import heroHotelImg from "@/assets/hero-hotel.jpg";
 import heroApartmentImg from "@/assets/hero-apartment.jpg";
 

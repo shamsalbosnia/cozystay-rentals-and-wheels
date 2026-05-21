@@ -1535,16 +1535,13 @@ export default function AdminDashboard() {
                           <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            const fd = new FormData();
-                            fd.append('file', file);
-                            fd.append('bucket', 'blog-images');
-                            const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
-                            if (res.ok) {
-                              const { url } = await res.json();
+                            try {
+                              const { uploadAdminImage } = await import('@/lib/adminImageUpload');
+                              const url = await uploadAdminImage(file, 'blog-images');
                               setBlogForm(p => ({...p, image_url: url}));
                               toast.success('Image uploaded');
-                            } else {
-                              toast.error('Upload failed');
+                            } catch (err: any) {
+                              toast.error('Upload failed', { description: err.message });
                             }
                           }} />
                           <span className="inline-flex items-center gap-1 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-sm cursor-pointer whitespace-nowrap">

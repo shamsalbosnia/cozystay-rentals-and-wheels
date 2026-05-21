@@ -19,9 +19,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('language') as Language) || 'ar';
+      return (localStorage.getItem('language') as Language) || 'en';
     }
-    return 'ar';
+    return 'en';
   });
 
   useEffect(() => {

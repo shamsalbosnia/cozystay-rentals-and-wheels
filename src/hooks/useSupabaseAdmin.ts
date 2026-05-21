@@ -226,13 +226,8 @@ export const useSupabaseAdmin = () => {
 
   const uploadImage = async (file: File, bucket: 'cars' | 'apartments' | 'hotels' | 'villas' | 'bundles') => {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', bucket);
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      return data.url as string;
+      const { uploadAdminImage } = await import('@/lib/adminImageUpload');
+      return await uploadAdminImage(file, bucket);
     } catch (err: any) { toast.error('Error uploading image', { description: err.message }); return null; }
   };
 

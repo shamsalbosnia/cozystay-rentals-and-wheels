@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Upload, X, Crown, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { uploadAdminImage, MAX_IMAGE_SIZE_LABEL } from '@/lib/adminImageUpload';
 
 interface MultiImageUploadProps {
   images: string[];
@@ -43,25 +44,31 @@ export function MultiImageUpload({ images, onChange, bucket, label = 'Images' }:
     setUrlInput('');
   };
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleFiles = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', bucket);
+      const results = await Promise.allSettled(
+        files.map(file => uploadAdminImage(file, bucket))
+      );
 
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Upload failed' }));
-        toast.error('Upload failed', { description: err.error });
-        return;
+      const newUrls: string[] = [];
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          newUrls.push(result.value);
+        } else {
+          const message =
+            result.reason instanceof Error ? result.reason.message : 'Upload failed';
+          toast.error(`Failed: ${files[i].name}`, { description: message });
+        }
+      });
+
+      if (newUrls.length > 0) {
+        onChange([...imagesRef.current, ...newUrls]);
+        if (newUrls.length > 1) {
+          toast.success(`${newUrls.length} images uploaded`);
+        }
       }
-      const { url } = await res.json();
-      if (url) {
-        onChange([...imagesRef.current, url]);
-      }
-    } catch {
-      toast.error('Upload failed');
     } finally {
       setUploading(false);
     }
@@ -132,7 +139,7 @@ export function MultiImageUpload({ images, onChange, bucket, label = 'Images' }:
           variant="outline"
           size="icon"
           disabled={uploading}
-          title="Upload file"
+          title="Upload images"
           onClick={() => fileInputRef.current?.click()}
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -141,17 +148,20 @@ export function MultiImageUpload({ images, onChange, bucket, label = 'Images' }:
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={e => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
+            const files = e.target.files ? Array.from(e.target.files) : [];
+            if (files.length > 0) handleFiles(files);
             e.target.value = '';
           }}
         />
       </div>
 
       {images.length === 0 && (
-        <p className="text-xs text-muted-foreground">No images yet. Paste a URL or upload a file.</p>
+        <p className="text-xs text-muted-foreground">
+          No images yet. Paste a URL or upload one or more files (max {MAX_IMAGE_SIZE_LABEL} each).
+        </p>
       )}
       {images.length > 0 && (
         <p className="text-xs text-muted-foreground">
