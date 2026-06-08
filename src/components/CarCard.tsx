@@ -83,6 +83,7 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
                       alt={`${car.name} — photo ${i + 1}`}
                       className="w-full h-full object-cover"
                       draggable={false}
+                      loading={i === 0 ? "eager" : "lazy"}
                     />
                   </div>
                 ))}
@@ -112,21 +113,6 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-
-            {/* Dot indicators */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-              {allImages.map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "block rounded-full transition-all duration-200",
-                    i === activeIndex
-                      ? "w-4 h-1.5 bg-white"
-                      : "w-1.5 h-1.5 bg-white/50"
-                  )}
-                />
-              ))}
-            </div>
 
             {/* Image count badge */}
             <div className="absolute top-2 right-2 z-10 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-md">
