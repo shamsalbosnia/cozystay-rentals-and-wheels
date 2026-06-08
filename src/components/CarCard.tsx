@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
-import { Car, Users, Gauge, ArrowRight } from "lucide-react";
+import { Car, Users, Gauge, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BookingModal from "./BookingModal";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,6 +12,7 @@ interface CarCardProps {
     id: number;
     name: string;
     image: string;
+    images?: string[];
     pricePerDay: number;
     type: string;
     seats: number;
@@ -23,27 +25,129 @@ interface CarCardProps {
 
 const CarCard = ({ car, carId, className }: CarCardProps) => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const { t } = useLanguage();
+
+  // Build the full images list — deduplicate fallback
+  const allImages: string[] = (() => {
+    const imgs = car.images?.filter(Boolean) ?? [];
+    if (imgs.length > 0) return imgs;
+    if (car.image) return [car.image];
+    return [];
+  })();
+
+  const hasMultiple = allImages.length > 1;
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false });
+
+  const scrollPrev = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!emblaApi) return;
+    emblaApi.scrollPrev();
+    setActiveIndex(emblaApi.selectedScrollSnap() === 0 ? allImages.length - 1 : emblaApi.selectedScrollSnap() - 1);
+  }, [emblaApi, allImages.length]);
+
+  const scrollNext = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!emblaApi) return;
+    emblaApi.scrollNext();
+    setActiveIndex(emblaApi.selectedScrollSnap() === allImages.length - 1 ? 0 : emblaApi.selectedScrollSnap() + 1);
+  }, [emblaApi, allImages.length]);
+
+  // Keep dot indicator in sync
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  // Register the select listener once emblaApi is ready
+  if (emblaApi) {
+    emblaApi.on("select", onSelect);
+  }
 
   return (
     <div className={cn(
-      "glass-card rounded-2xl overflow-hidden group h-full flex flex-col transition-all duration-300 hover:shadow-md", 
+      "glass-card rounded-2xl overflow-hidden group h-full flex flex-col transition-all duration-300 hover:shadow-md",
       className
     )}>
-      <div className="relative overflow-hidden h-48">
-        <img 
-          src={car.image} 
-          alt={car.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
+      {/* Image carousel */}
+      <div className="relative overflow-hidden h-48 bg-muted">
+        {hasMultiple ? (
+          <>
+            <div ref={emblaRef} className="overflow-hidden h-full w-full">
+              <div className="flex h-full">
+                {allImages.map((src, i) => (
+                  <div key={i} className="relative flex-[0_0_100%] h-full">
+                    <img
+                      src={src}
+                      alt={`${car.name} — photo ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Prev / Next arrows — visible on hover */}
+            <button
+              onClick={scrollPrev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10
+                         w-7 h-7 rounded-full bg-black/50 text-white
+                         flex items-center justify-center
+                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                         hover:bg-black/70"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={scrollNext}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10
+                         w-7 h-7 rounded-full bg-black/50 text-white
+                         flex items-center justify-center
+                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                         hover:bg-black/70"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            {/* Dot indicators */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+              {allImages.map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "block rounded-full transition-all duration-200",
+                    i === activeIndex
+                      ? "w-4 h-1.5 bg-white"
+                      : "w-1.5 h-1.5 bg-white/50"
+                  )}
+                />
+              ))}
+            </div>
+
+            {/* Image count badge */}
+            <div className="absolute top-2 right-2 z-10 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-md">
+              {activeIndex + 1}/{allImages.length}
+            </div>
+          </>
+        ) : (
+          <img
+            src={allImages[0] ?? car.image}
+            alt={car.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        )}
       </div>
-      
+
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xl font-semibold">{car.name}</h3>
           <span className="text-sm font-medium text-muted-foreground">{car.type}</span>
         </div>
-        
+
         <div className="flex items-center gap-4 py-3 border-y border-border my-3">
           <div className="flex items-center gap-1">
             <Car className="h-4 w-4 text-muted-foreground" />
@@ -58,7 +162,7 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
             <span className="text-sm">{t("cars.unlimited")}</span>
           </div>
         </div>
-        
+
         <div className="mb-4 flex-1">
           <h4 className="text-sm font-medium mb-2">{t("cars.features")}:</h4>
           <ul className="grid grid-cols-1 gap-1 text-sm text-muted-foreground">
@@ -74,8 +178,8 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
             ))}
           </ul>
         </div>
-        
-        <Button 
+
+        <Button
           className="w-full justify-between group rounded-full mt-auto"
           onClick={() => setIsBookingModalOpen(true)}
         >
@@ -83,7 +187,7 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
-      
+
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}

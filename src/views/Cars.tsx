@@ -111,6 +111,7 @@ const Cars = () => {
     id: car.id || 0,
     name: car.name,
     image: car.image_url,
+    images: car.images?.length ? car.images : [car.image_url].filter(Boolean),
     pricePerDay: car.price_per_day,
     type: car.type,
     seats: car.seats,
