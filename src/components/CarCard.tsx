@@ -1,11 +1,13 @@
 
 import { useState, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Car, Users, Gauge, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BookingModal from "./BookingModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toCarSlug } from "@/lib/slug";
 
 interface CarCardProps {
   car: {
@@ -130,7 +132,12 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
 
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-semibold">{car.name}</h3>
+          <Link
+            href={`/cars/${toCarSlug(car.name, car.id)}`}
+            className="text-xl font-semibold hover:text-primary transition-colors"
+          >
+            {car.name}
+          </Link>
           <span className="text-sm font-medium text-muted-foreground">{car.type}</span>
         </div>
 
@@ -165,13 +172,20 @@ const CarCard = ({ car, carId, className }: CarCardProps) => {
           </ul>
         </div>
 
-        <Button
-          className="w-full justify-between group rounded-full mt-auto"
-          onClick={() => setIsBookingModalOpen(true)}
-        >
-          <span>{t("cars.book")}</span>
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Button>
+        <div className="flex gap-2 mt-auto">
+          <Link href={`/cars/${toCarSlug(car.name, car.id)}`} className="flex-1">
+            <Button variant="outline" className="w-full rounded-full">
+              View Details
+            </Button>
+          </Link>
+          <Button
+            className="flex-1 justify-between group rounded-full"
+            onClick={() => setIsBookingModalOpen(true)}
+          >
+            <span>{t("cars.book")}</span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </div>
       </div>
 
       <BookingModal
