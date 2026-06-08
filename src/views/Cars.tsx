@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CarCard from "@/components/CarCard";
+import StickyBookingWidget from "@/components/StickyBookingWidget";
 import FooterSection from "@/components/home/FooterSection";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Car } from "@/types/supabase";
 
@@ -23,11 +27,38 @@ const TYPE_CARDS = [
   { key: 'Sedan', label: 'Sedan', image: imgSedan },
 ];
 
+const SORT_OPTIONS = [
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "seats-asc", label: "Seats: Fewest First" },
+  { value: "seats-desc", label: "Seats: Most First" },
+];
+
+interface BookingFilters {
+  pickupCity: string;
+  returnCity: string;
+  pickupDate: Date | undefined;
+  returnDate: Date | undefined;
+  ageGroup: string;
+}
+
 const Cars = () => {
   const { t } = useLanguage();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Sidebar filters
+  const [transmission, setTransmission] = useState<string>("all");
+  const [minSeats, setMinSeats] = useState<number>(1);
+  const [maxPrice, setMaxPrice] = useState<number>(500);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Sort
+  const [sort, setSort] = useState<string>("price-asc");
+
+  // Booking widget context
+  const [bookingFilters, setBookingFilters] = useState<BookingFilters | null>(null);
 
   useEffect(() => {
     fetch('/api/cars')
@@ -36,12 +67,45 @@ const Cars = () => {
       .catch(() => setLoading(false));
   }, []);
 
-  const filteredCars = useMemo(() => {
-    if (!selectedType) return [];
-    return cars.filter(c =>
-      c.type.toLowerCase().includes(selectedType.toLowerCase())
-    );
-  }, [cars, selectedType]);
+  const maxPossiblePrice = useMemo(
+    () => Math.max(500, ...cars.map(c => c.price_per_day)),
+    [cars]
+  );
+
+  const filteredAndSorted = useMemo(() => {
+    let result = cars;
+
+    if (selectedType) {
+      result = result.filter(c => c.type.toLowerCase().includes(selectedType.toLowerCase()));
+    }
+    if (transmission !== "all") {
+      result = result.filter(c => c.transmission.toLowerCase() === transmission.toLowerCase());
+    }
+    result = result.filter(c => c.seats >= minSeats && c.price_per_day <= maxPrice);
+
+    result = [...result].sort((a, b) => {
+      if (sort === "price-asc") return a.price_per_day - b.price_per_day;
+      if (sort === "price-desc") return b.price_per_day - a.price_per_day;
+      if (sort === "seats-asc") return a.seats - b.seats;
+      if (sort === "seats-desc") return b.seats - a.seats;
+      return 0;
+    });
+
+    return result;
+  }, [cars, selectedType, transmission, minSeats, maxPrice, sort]);
+
+  const activeFilterCount = [
+    transmission !== "all",
+    minSeats > 1,
+    maxPrice < maxPossiblePrice,
+  ].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setTransmission("all");
+    setMinSeats(1);
+    setMaxPrice(maxPossiblePrice);
+    setSelectedType(null);
+  };
 
   const carForCard = (car: Car) => ({
     id: car.id || 0,
@@ -123,72 +187,290 @@ const Cars = () => {
         </div>
       </section>
 
-      {/* Cars grid */}
-      <section id="cars-grid" className="py-16">
+      {/* Sticky booking widget */}
+      <StickyBookingWidget
+        onSearch={(filters) => {
+          setBookingFilters(filters);
+          setTimeout(() => {
+            document.getElementById('cars-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 50);
+        }}
+      />
+
+      {/* Active booking context banner */}
+      {bookingFilters?.pickupCity && (
+        <div className="bg-primary/10 border-b border-primary/20 py-2">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-sm">
+            <span className="text-primary font-medium">
+              Showing cars for <strong>{bookingFilters.pickupCity}</strong>
+              {bookingFilters.pickupDate && ` · ${bookingFilters.pickupDate.toLocaleDateString()}`}
+              {bookingFilters.returnDate && ` → ${bookingFilters.returnDate.toLocaleDateString()}`}
+              {bookingFilters.ageGroup && ` · Driver age: ${bookingFilters.ageGroup}`}
+            </span>
+            <button onClick={() => setBookingFilters(null)} className="text-muted-foreground hover:text-foreground ml-4">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main content: sidebar + grid */}
+      <section id="cars-grid" className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex gap-8">
+
+            {/* Filter sidebar — desktop */}
+            <aside className="hidden lg:block w-60 shrink-0">
+              <div className="sticky top-[120px] rounded-2xl border border-border p-5 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">Filters</h3>
+                  {activeFilterCount > 0 && (
+                    <button onClick={resetFilters} className="text-xs text-primary hover:underline">
+                      Reset ({activeFilterCount})
+                    </button>
+                  )}
+                </div>
+
+                {/* Transmission */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Transmission</p>
+                  <div className="flex flex-col gap-2">
+                    {["all", "Automatic", "Manual"].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setTransmission(opt)}
+                        className={`text-sm text-left px-3 py-1.5 rounded-lg transition-colors ${
+                          transmission === opt
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-accent"
+                        }`}
+                      >
+                        {opt === "all" ? "All" : opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Minimum seats */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Min. seats: <span className="text-foreground font-semibold">{minSeats}+</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 4, 5, 7].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setMinSeats(n)}
+                        className={`text-sm px-3 py-1 rounded-lg border transition-colors ${
+                          minSeats === n
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {n}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Max price */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Max price: <span className="text-foreground font-semibold">{maxPrice} BAM/day</span>
+                  </p>
+                  <Slider
+                    min={50}
+                    max={maxPossiblePrice}
+                    step={10}
+                    value={[maxPrice]}
+                    onValueChange={([v]) => setMaxPrice(v)}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>50</span>
+                    <span>{maxPossiblePrice}</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main grid area */}
+            <div className="flex-1 min-w-0">
+              {/* Toolbar: count + sort + mobile filter toggle */}
+              <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+                <div>
+                  {!loading && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">{filteredAndSorted.length}</span> vehicles
+                      {selectedType && <span> · {selectedType}</span>}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Mobile filter button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden gap-2"
+                    onClick={() => setSidebarOpen(true)}
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-primary text-primary-foreground rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Sort */}
+                  <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger className="h-8 text-xs w-[190px]">
+                      <ArrowUpDown className="h-3 w-3 mr-1.5 shrink-0" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SORT_OPTIONS.map(o => (
+                        <SelectItem key={o.value} value={o.value} className="text-xs">
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-20">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredAndSorted.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16"
+                >
+                  <p className="text-lg text-muted-foreground">
+                    {selectedType
+                      ? `No ${selectedType.toLowerCase()} vehicles match your filters.`
+                      : "No vehicles match your filters."}
+                  </p>
+                  <Button variant="outline" className="mt-4" onClick={resetFilters}>
+                    Clear filters
+                  </Button>
+                </motion.div>
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${selectedType}-${transmission}-${minSeats}-${maxPrice}-${sort}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8"
+                  >
+                    {filteredAndSorted.map((car, idx) => (
+                      <motion.div
+                        key={car.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: idx * 0.07 }}
+                      >
+                        <CarCard car={carForCard(car)} carId={car.id} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              )}
             </div>
-          ) : !selectedType ? (
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile filter drawer */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-16"
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 bottom-0 w-72 bg-background z-50 p-6 overflow-y-auto lg:hidden"
             >
-              <p className="text-lg text-muted-foreground">
-                Select a vehicle category above to browse our fleet
-              </p>
-            </motion.div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-8">
-                <motion.div
-                  key={selectedType}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    {selectedType} Vehicles
-                  </h2>
-                  <p className="text-muted-foreground mt-1">
-                    {filteredCars.length} {filteredCars.length === 1 ? 'vehicle' : 'vehicles'} available
-                  </p>
-                </motion.div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold">Filters</h3>
+                <button onClick={() => setSidebarOpen(false)}>
+                  <X className="h-5 w-5" />
+                </button>
               </div>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={selectedType}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {filteredCars.length === 0 ? (
-                    <div className="text-center py-16 text-muted-foreground">
-                      <p className="text-lg">No {selectedType.toLowerCase()} vehicles available at the moment.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                      {filteredCars.map((car, idx) => (
-                        <motion.div
-                          key={car.id}
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: idx * 0.1 }}
-                        >
-                          <CarCard car={carForCard(car)} carId={car.id} />
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </>
-          )}
-        </div>
-      </section>
+              <div className="space-y-6">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Transmission</p>
+                  <div className="flex flex-col gap-2">
+                    {["all", "Automatic", "Manual"].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setTransmission(opt)}
+                        className={`text-sm text-left px-3 py-1.5 rounded-lg transition-colors ${
+                          transmission === opt ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                        }`}
+                      >
+                        {opt === "all" ? "All" : opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Min. seats: <span className="text-foreground font-semibold">{minSeats}+</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 4, 5, 7].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setMinSeats(n)}
+                        className={`text-sm px-3 py-1 rounded-lg border transition-colors ${
+                          minSeats === n ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {n}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    Max price: <span className="text-foreground font-semibold">{maxPrice} BAM/day</span>
+                  </p>
+                  <Slider
+                    min={50}
+                    max={maxPossiblePrice}
+                    step={10}
+                    value={[maxPrice]}
+                    onValueChange={([v]) => setMaxPrice(v)}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={resetFilters}>Reset</Button>
+                  <Button className="flex-1" onClick={() => setSidebarOpen(false)}>Apply</Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <FooterSection />
     </div>
