@@ -144,7 +144,7 @@ const CarRentalStep = ({ data, onUpdate, onNext, onPrevious }: CarRentalStepProp
                       <h4 className="font-semibold">{car.name}</h4>
                       <p className="text-sm text-muted-foreground">{car.description}</p>
                       <p className="text-sm font-medium text-primary">
-                        €{car.pricePerDay}/{t("bundle.wizard.step3.perDay")}
+                        {car.pricePerDay} BAM/{t("bundle.wizard.step3.perDay")}
                       </p>
                     </div>
                     <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">

@@ -84,13 +84,7 @@ const PropertyDetailModal = ({ isOpen, onClose, hotel, hotelName, location }: Pr
     }
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const formatCurrency = (value: number) => `${value.toLocaleString('en-US')} BAM`;
 
   const getRoomTypeTranslation = (roomType: string) => {
     if (!roomType) return "Hotel Room";

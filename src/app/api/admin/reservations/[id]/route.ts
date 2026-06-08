@@ -53,7 +53,7 @@ export async function PATCH(
 
       if (options.includes('full') && basePrice > 0) {
         const amt = parseFloat((basePrice * 0.95).toFixed(2));
-        fullAmount = `${amt} EUR`;
+        fullAmount = `${amt} BAM`;
         fullLink = await createPayPalInvoiceLink({
           customer_email: existing.customer_email,
           customer_name: existing.customer_name,
@@ -64,13 +64,13 @@ export async function PATCH(
       }
       if (options.includes('deposit') && basePrice > 0) {
         const amt = parseFloat((basePrice * 0.10).toFixed(2));
-        depositAmount = `${amt} EUR`;
+        depositAmount = `${amt} BAM`;
         depositLink = await createPayPalInvoiceLink({
           customer_email: existing.customer_email,
           customer_name: existing.customer_name,
           item_name: `${itemName} — 10% Deposit`,
           amount: amt,
-          note: `10% deposit for ${itemName}. Remaining ${(basePrice * 0.90).toFixed(2)} EUR is due on arrival. Reservation: ${existing.start_date} → ${existing.end_date}.`,
+          note: `10% deposit for ${itemName}. Remaining ${(basePrice * 0.90).toFixed(2)} BAM is due on arrival. Reservation: ${existing.start_date} → ${existing.end_date}.`,
         }) ?? undefined;
       }
 
@@ -79,12 +79,12 @@ export async function PATCH(
         item_name: itemName,
         start_date: existing.start_date,
         end_date: existing.end_date,
-        base_price: basePrice > 0 ? `${basePrice} EUR` : undefined,
+        base_price: basePrice > 0 ? `${basePrice} BAM` : undefined,
         full_payment_link: fullLink,
         full_amount: fullAmount,
         deposit_link: depositLink,
         deposit_amount: depositAmount,
-        remainder_amount: (options.includes('deposit') && basePrice > 0) ? `${(basePrice * 0.90).toFixed(2)} EUR` : undefined,
+        remainder_amount: (options.includes('deposit') && basePrice > 0) ? `${(basePrice * 0.90).toFixed(2)} BAM` : undefined,
       });
 
       // Generate PDF invoice
@@ -120,10 +120,10 @@ export async function PATCH(
 
       // Send copy to admin
       const paymentSummary = options.includes('full') && options.includes('deposit')
-        ? `Full: ${fullAmount} EUR / Deposit: ${depositAmount} EUR`
+        ? `Full: ${fullAmount} BAM / Deposit: ${depositAmount} BAM`
         : options.includes('full')
-        ? `Full payment: ${fullAmount} EUR`
-        : `Deposit: ${depositAmount} EUR`;
+        ? `Full payment: ${fullAmount} BAM`
+        : `Deposit: ${depositAmount} BAM`;
       const { subject: adminSubject, html: adminHtml } = adminInvoiceNotificationEmail({
         customer_name: existing.customer_name,
         customer_email: existing.customer_email,
@@ -132,7 +132,7 @@ export async function PATCH(
         item_type: 'Car Rental',
         start_date: existing.start_date,
         end_date: existing.end_date,
-        base_price: `${basePrice} EUR`,
+        base_price: `${basePrice} BAM`,
         invoice_id: invoiceId,
         payment_summary: paymentSummary,
       });

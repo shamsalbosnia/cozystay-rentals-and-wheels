@@ -610,7 +610,7 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Price / Day ($)</Label>
+                      <Label>Price / Day (BAM)</Label>
                       <Input type="number" required min={0} value={newCar.price_per_day} onChange={e => setNewCar({...newCar, price_per_day: parseInt(e.target.value) || 0})} className="bg-background" />
                     </div>
                     <div className="space-y-2">
@@ -672,7 +672,7 @@ export default function AdminDashboard() {
                       <td className="py-3.5 px-4 font-medium">{car.name}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{car.type}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{car.seats}</td>
-                      <td className="py-3.5 px-4 font-semibold text-primary">${car.price_per_day}</td>
+                      <td className="py-3.5 px-4 font-semibold text-primary">{car.price_per_day} BAM</td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${car.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
                           {car.is_active ? 'Active' : 'Hidden'}
@@ -720,7 +720,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="space-y-2"><Label>Rooms</Label><Input type="number" required min={1} value={newApartment.rooms} onChange={e => setNewApartment({...newApartment, rooms: parseInt(e.target.value)})} className="bg-background" /></div>
                     <div className="space-y-2"><Label>Size (m²)</Label><Input type="number" required min={0} value={newApartment.size} onChange={e => setNewApartment({...newApartment, size: parseInt(e.target.value)})} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price ($)</Label><Input type="number" required min={0} value={newApartment.price} onChange={e => setNewApartment({...newApartment, price: parseInt(e.target.value)})} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price (BAM)</Label><Input type="number" required min={0} value={newApartment.price} onChange={e => setNewApartment({...newApartment, price: parseInt(e.target.value)})} className="bg-background" /></div>
                   </div>
                   <MultiImageUpload
                     images={newApartment.image_url ? [newApartment.image_url] : []}
@@ -757,7 +757,7 @@ export default function AdminDashboard() {
                       <td className="py-3.5 px-4 text-foreground/80">{apt.city}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{apt.rooms}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{apt.size} m²</td>
-                      <td className="py-3.5 px-4 font-semibold text-primary">${apt.price.toLocaleString()}</td>
+                      <td className="py-3.5 px-4 font-semibold text-primary">{apt.price.toLocaleString()} BAM</td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex justify-end gap-1.5">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary" onClick={() => handleEditApt(apt)}><Edit className="h-3.5 w-3.5" /></Button>
@@ -810,9 +810,9 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2"><Label>Bathrooms</Label><Input type="number" min={1} value={newHotel.bathroom} onChange={e => setNewHotel({...newHotel, bathroom: parseInt(e.target.value) || 1})} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price Single ($)</Label><Input type="number" required min={0} value={newHotel.price_single} onChange={e => setNewHotel({...newHotel, price_single: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price Double ($)</Label><Input type="number" required min={0} value={newHotel.price_double} onChange={e => setNewHotel({...newHotel, price_double: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price Triple ($)</Label><Input type="number" required min={0} value={newHotel.price_triple} onChange={e => setNewHotel({...newHotel, price_triple: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price Single (BAM)</Label><Input type="number" required min={0} value={newHotel.price_single} onChange={e => setNewHotel({...newHotel, price_single: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price Double (BAM)</Label><Input type="number" required min={0} value={newHotel.price_double} onChange={e => setNewHotel({...newHotel, price_double: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price Triple (BAM)</Label><Input type="number" required min={0} value={newHotel.price_triple} onChange={e => setNewHotel({...newHotel, price_triple: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
                     <div className="space-y-2 lg:col-span-3">
                       <Label>Description (English)</Label>
                       <Textarea value={newHotel.description_en || ''} onChange={e => setNewHotel({...newHotel, description_en: e.target.value, description: e.target.value})} placeholder="Brief description in English..." className="bg-background resize-none" rows={2} />
@@ -863,7 +863,7 @@ export default function AdminDashboard() {
                       <td className="py-3.5 px-4 font-medium">{h.name}<div className="text-xs text-muted-foreground">{h.room_name}</div></td>
                       <td className="py-3.5 px-4 text-foreground/80">{h.location}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{h.room_type}</td>
-                      <td className="py-3.5 px-4 text-foreground/80 text-xs">${h.price_single} / ${h.price_double} / ${h.price_triple}</td>
+                      <td className="py-3.5 px-4 text-foreground/80 text-xs">{h.price_single} / {h.price_double} / {h.price_triple} BAM</td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${h.availability ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
                           {h.availability ? 'Available' : 'Unavailable'}
@@ -921,7 +921,7 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-2"><Label>Bathrooms</Label><Input type="number" min={1} value={newVilla.bathroom} onChange={e => setNewVilla({...newVilla, bathroom: parseInt(e.target.value) || 1})} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price / Night ($)</Label><Input type="number" required min={0} value={newVilla.price} onChange={e => setNewVilla({...newVilla, price: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price / Night (BAM)</Label><Input type="number" required min={0} value={newVilla.price} onChange={e => setNewVilla({...newVilla, price: parseFloat(e.target.value) || 0})} className="bg-background" /></div>
                     <div className="space-y-2 lg:col-span-3">
                       <Label>Description (English)</Label>
                       <Textarea value={newVilla.description_en || ''} onChange={e => setNewVilla({...newVilla, description_en: e.target.value, description: e.target.value})} placeholder="Brief description in English..." className="bg-background resize-none" rows={2} />
@@ -972,7 +972,7 @@ export default function AdminDashboard() {
                       <td className="py-3.5 px-4 font-medium">{v.name}<div className="text-xs text-muted-foreground">{v.room_name}</div></td>
                       <td className="py-3.5 px-4 text-foreground/80">{v.location}</td>
                       <td className="py-3.5 px-4 text-foreground/80">{v.room_type}</td>
-                      <td className="py-3.5 px-4 font-semibold text-primary">${v.price.toLocaleString()}</td>
+                      <td className="py-3.5 px-4 font-semibold text-primary">{v.price.toLocaleString()} BAM</td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${v.availability ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
                           {v.availability ? 'Available' : 'Unavailable'}
@@ -1133,8 +1133,8 @@ export default function AdminDashboard() {
                   <div className="space-y-2"><Label>Description</Label><Textarea value={newBundle.description} onChange={e => setNewBundle(p => ({ ...p, description: e.target.value }))} className="bg-background" rows={3} /></div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="space-y-2"><Label>Duration (days)</Label><Input type="number" min={1} value={newBundle.duration} onChange={e => setNewBundle(p => ({ ...p, duration: parseInt(e.target.value) || 1 }))} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Price/Person (€)</Label><Input type="number" min={0} value={newBundle.price_per_person} onChange={e => setNewBundle(p => ({ ...p, price_per_person: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
-                    <div className="space-y-2"><Label>Group Price (€)</Label><Input type="number" min={0} value={newBundle.price_per_group} onChange={e => setNewBundle(p => ({ ...p, price_per_group: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Price/Person (BAM)</Label><Input type="number" min={0} value={newBundle.price_per_person} onChange={e => setNewBundle(p => ({ ...p, price_per_person: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
+                    <div className="space-y-2"><Label>Group Price (BAM)</Label><Input type="number" min={0} value={newBundle.price_per_group} onChange={e => setNewBundle(p => ({ ...p, price_per_group: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
                     <div className="space-y-2"><Label>Max Group Size</Label><Input type="number" min={1} value={newBundle.max_group_size} onChange={e => setNewBundle(p => ({ ...p, max_group_size: parseInt(e.target.value) || 8 }))} className="bg-background" /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1177,7 +1177,7 @@ export default function AdminDashboard() {
                     <tr key={b.id} className="hover:bg-foreground/[0.02] transition-colors">
                       <td className="py-3.5 px-4"><div className="font-medium">{b.title}</div><div className="text-xs text-muted-foreground">{b.subtitle}</div></td>
                       <td className="py-3.5 px-4 text-foreground/80">{b.duration} day{b.duration !== 1 ? 's' : ''}</td>
-                      <td className="py-3.5 px-4 font-medium">€{b.price_per_person}</td>
+                      <td className="py-3.5 px-4 font-medium">{b.price_per_person} BAM</td>
                       <td className="py-3.5 px-4 text-foreground/80 text-xs">{(b.regions || []).join(', ') || '—'}</td>
                       <td className="py-3.5 px-4"><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${b.is_active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}>{b.is_active ? 'Active' : 'Inactive'}</span></td>
                       <td className="py-3.5 px-4 text-right">
@@ -1438,7 +1438,7 @@ export default function AdminDashboard() {
                       <div className="space-y-2"><Label>Description (Arabic / AR) *</Label><Textarea required value={newAdventure.description_ar} onChange={e => setNewAdventure(p => ({ ...p, description_ar: e.target.value }))} className="bg-background" rows={2} placeholder="وصف مختصر بالعربية..." dir="rtl" /></div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-2"><Label>Duration</Label><Input value={newAdventure.duration} onChange={e => setNewAdventure(p => ({ ...p, duration: e.target.value }))} placeholder="e.g. 3 hours" className="bg-background" /></div>
-                        <div className="space-y-2"><Label>Price (€)</Label><Input type="number" min={0} value={newAdventure.price} onChange={e => setNewAdventure(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
+                        <div className="space-y-2"><Label>Price (BAM)</Label><Input type="number" min={0} value={newAdventure.price} onChange={e => setNewAdventure(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} className="bg-background" /></div>
                         <div className="space-y-2"><Label>Image URL</Label><Input value={newAdventure.image} onChange={e => setNewAdventure(p => ({ ...p, image: e.target.value }))} placeholder="https://..." className="bg-background" /></div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -1473,7 +1473,7 @@ export default function AdminDashboard() {
                           <td className="py-3.5 px-4"><div className="font-medium">{a.title}</div><div className="text-xs text-muted-foreground line-clamp-1">{a.description}</div></td>
                           <td className="py-3.5 px-4 text-foreground/80">{a.city}</td>
                           <td className="py-3.5 px-4 text-foreground/80">{a.duration}</td>
-                          <td className="py-3.5 px-4 font-medium">€{a.price}</td>
+                          <td className="py-3.5 px-4 font-medium">{a.price} BAM</td>
                           <td className="py-3.5 px-4"><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${a.is_active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}>{a.is_active ? 'Active' : 'Inactive'}</span></td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex justify-end gap-1.5">
@@ -1807,7 +1807,7 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label htmlFor="approvePrice">Base Price (EUR)</Label>
+              <Label htmlFor="approvePrice">Base Price (BAM)</Label>
               <Input
                 id="approvePrice"
                 type="number"
@@ -1833,7 +1833,7 @@ export default function AdminDashboard() {
                     <div className="font-semibold text-sm">Full Payment</div>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 pl-6">5% discount applied</div>
-                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{fullAmount} EUR</div>}
+                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{fullAmount} BAM</div>}
                 </button>
                 <button
                   type="button"
@@ -1847,7 +1847,7 @@ export default function AdminDashboard() {
                     <div className="font-semibold text-sm">10% Deposit</div>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 pl-6">Remainder on arrival</div>
-                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{depositAmount} EUR</div>}
+                  {basePrice > 0 && <div className="text-xs font-medium text-amber-700 mt-0.5 pl-6">{depositAmount} BAM</div>}
                 </button>
               </div>
             </div>
@@ -1856,12 +1856,12 @@ export default function AdminDashboard() {
                 <div className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Email will include:</div>
                 {paymentOptions.full && (
                   <div className="text-sm text-green-800">
-                    ✅ <span className="font-semibold">Full payment:</span> {fullAmount} EUR <span className="text-xs text-green-600">(saves {(basePrice * 0.05).toFixed(2)} EUR)</span>
+                    ✅ <span className="font-semibold">Full payment:</span> {fullAmount} BAM <span className="text-xs text-green-600">(saves {(basePrice * 0.05).toFixed(2)} BAM)</span>
                   </div>
                 )}
                 {paymentOptions.deposit && (
                   <div className="text-sm text-green-800">
-                    ✅ <span className="font-semibold">10% deposit:</span> {depositAmount} EUR <span className="text-xs text-green-600">(+ {(basePrice * 0.90).toFixed(2)} EUR on arrival)</span>
+                    ✅ <span className="font-semibold">10% deposit:</span> {depositAmount} BAM <span className="text-xs text-green-600">(+ {(basePrice * 0.90).toFixed(2)} BAM on arrival)</span>
                   </div>
                 )}
               </div>

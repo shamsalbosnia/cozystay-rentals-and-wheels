@@ -19,13 +19,7 @@ const PropertyFilters = ({ filters, onFiltersChange }: PropertyFiltersProps) => 
   const locations = ["All", "Sarajevo", "Mostar", "Bihać", "Trebinje"];
   const propertyTypes = ["All", "Land", "House", "Commercial"];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const formatCurrency = (value: number) => `${value.toLocaleString('en-US')} BAM`;
 
   // Handle location toggle selection
   const handleLocationToggle = (value: string[]) => {
