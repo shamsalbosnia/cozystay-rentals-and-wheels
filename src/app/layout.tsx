@@ -63,7 +63,7 @@ export default function RootLayout({
               logo: 'https://www.shamsalbosnia.com/lovable-uploads/shams-albosnia-logo.png',
               image: 'https://www.shamsalbosnia.com/og-image.jpg',
               description: 'Car rentals, hotels, villas, apartments and tour packages in Bosnia & Herzegovina.',
-              telephone: '+38765339886',
+              telephone: '+38761228100',
               email: 'info@shamsalbosnia.com',
               address: {
                 '@type': 'PostalAddress',

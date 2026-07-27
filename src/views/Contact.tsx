@@ -102,7 +102,7 @@ const Contact = () => {
                   <Phone className="w-6 h-6 text-blue-500" />
                   <div>
                     <h3 className="font-medium">{t("contact.phone")}</h3>
-                    <p className="text-muted-foreground">+387 65 339 886</p>
+                    <p className="text-muted-foreground">+38761228100</p>
                   </div>
                 </motion.div>
                 
